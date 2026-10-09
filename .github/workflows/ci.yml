@@ -50,9 +50,11 @@ jobs:
           DATABASE_URL: postgresql://mediquery:ci@db:5432/mediquery
           JWT_SECRET: ci-only-secret-that-is-long-enough-for-validation
           CORS_ORIGINS: https://app.example.test
+          RATE_LIMIT_REDIS_URL: redis://redis.example.test:6379/0
         run: |
           printf '%s\n' \
             'DATABASE_URL=postgresql://mediquery:ci@db:5432/mediquery' \
             'JWT_SECRET=ci-only-secret-that-is-long-enough-for-validation' \
-            'CORS_ORIGINS=https://app.example.test' > .env
+            'CORS_ORIGINS=https://app.example.test' \\
+            'RATE_LIMIT_REDIS_URL=redis://redis.example.test:6379/0' > .env
           docker compose config --quiet
