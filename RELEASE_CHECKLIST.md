@@ -7,6 +7,9 @@
 - [ ] `python -m flake8 src tests app.py --max-line-length=120`
 - [ ] `python -m pytest -q`
 - [ ] `python -m compileall -q src app.py`
+- [ ] Fresh-database migration passes with `alembic upgrade head`.
+- [ ] Production startup rejects a missing/outdated Alembic revision.
+- [ ] Production Redis rate-limit backend and trusted proxy IPs are configured and verified.
 - [ ] GitHub Actions quality gate is green.
 - [ ] Phase 17 acceptance is green.
 - [ ] Phase 18 acceptance is green.
@@ -33,7 +36,7 @@
 - [ ] Upload synthetic text-based PDF.
 - [ ] Verify structured findings and source evidence.
 - [ ] Verify owner isolation with a second account.
-- [ ] Verify report deletion.
+- [ ] Verify report deletion and rollback-safe local-file cleanup.
 - [ ] Verify invalid PDF rejection.
 - [ ] Verify Free entitlement enforcement.
 - [ ] Verify retrieval provenance and prompt-injection framing.
