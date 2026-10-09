@@ -16,7 +16,7 @@ def test_local_limiter_enforces_window(monkeypatch):
     assert not limiter.allowed("client", 2, 60)
 
     clock["now"] = 161.0
-    assert asyncio.run(limiter.allowed("client", 2, 60))
+    assert limiter.allowed("client", 2, 60)
 
 
 def test_local_limiter_bounds_distinct_client_memory():
@@ -79,5 +79,8 @@ def test_request_budgets_distinguish_uploads_from_report_reads():
 
     assert _request_limit("POST", "/api/reports") == (5, "report-upload")
     assert _request_limit("GET", "/api/reports") == (60, "report-read")
-    assert _request_limit("DELETE", "/api/reports/report-id") == (10, "report-delete")
+    assert _request_limit("DELETE", "/api/reports/report-id") == (
+        10,
+        "report-delete",
+    )
     assert _request_limit("POST", "/api/auth/login") == (10, "auth")
