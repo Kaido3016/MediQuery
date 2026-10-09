@@ -13,7 +13,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from src.api.routes import account_security, auth, billing, reports, search
-from src.core.database import create_database
+from sqlalchemy import text
+\nfrom src.core.database import create_database, engine
 from src.core.observability import elapsed_ms, metrics
 from src.core.rate_limit import RateLimitBackendUnavailable, rate_limiter
 from src.core.settings import get_settings
@@ -153,6 +154,35 @@ async def root():
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+
+
+@app.get("/health/ready")
+async def readiness_check():
+    """Readiness probe for critical production dependencies; expose no secrets/details."""
+    checks = {"database": False, "rate_limit": True, "storage": True, "scanner": True}
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+        checks["database"] = True
+    except Exception:
+        checks["database"] = False
+    if settings.environment.lower() == "production":
+        client = None
+        try:
+            client = Redis.from_url(settings.rate_limit_redis_url, socket_connect_timeout=2, socket_timeout=2)
+            checks["rate_limit"] = bool(await client.ping())
+        except Exception:
+            checks["rate_limit"] = False
+        finally:
+            if client is not None:
+                await client.aclose()
+        checks["storage"] = check_storage()
+        checks["scanner"] = check_scanner()
+    ready = all(checks.values())
+    return JSONResponse(
+        status_code=200 if ready else 503,
+        content={"status": "ready" if ready else "not_ready"},
+    )
 
 
 @app.get("/health/metrics")
