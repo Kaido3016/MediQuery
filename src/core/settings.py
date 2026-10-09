@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     free_report_limit: int = Field(default=3, ge=0)
     billing_checkout_url: str | None = None
     metrics_token: str | None = None
+    rate_limit_redis_url: str | None = None
 
     @field_validator("cors_origins", mode="before")
     @classmethod
@@ -52,6 +53,10 @@ class Settings(BaseSettings):
                 )
             if any(origin.startswith("http://") for origin in self.cors_origins):
                 raise RuntimeError("Production CORS origins must use HTTPS")
+            if not self.rate_limit_redis_url:
+                raise RuntimeError(
+                    "RATE_LIMIT_REDIS_URL is required in production for shared rate limiting"
+                )
             if self.metrics_token is not None and len(self.metrics_token) < 32:
                 raise RuntimeError(
                     "METRICS_TOKEN must be at least 32 characters when configured"
