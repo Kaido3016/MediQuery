@@ -38,6 +38,7 @@ def evaluate() -> dict[str, object]:
     exact_tp = exact_fp = exact_fn = 0
     field_correct = field_total = 0
     per_case = []
+    missed_findings = []
 
     for case in dataset["cases"]:
         predicted, _ = _parse_page_findings(case["text"], 1)
@@ -45,6 +46,10 @@ def evaluate() -> dict[str, object]:
         expected_by_id = {_identity(item): item for item in expected}
         predicted_by_id = {_identity(item): item for item in predicted}
         matched_ids = expected_by_id.keys() & predicted_by_id.keys()
+        missed_findings.extend(
+            {"case_id": case["id"], "name": expected_by_id[key]["name"], "value": expected_by_id[key]["value"], "unit": expected_by_id[key]["unit"]}
+            for key in expected_by_id.keys() - predicted_by_id.keys()
+        )
 
         detection_tp += len(matched_ids)
         detection_fp += len(predicted_by_id.keys() - expected_by_id.keys())
@@ -100,6 +105,7 @@ def evaluate() -> dict[str, object]:
         },
         "matched_finding_field_accuracy": round(field_correct / max(field_total, 1), 4),
         "per_case": per_case,
+        "missed_findings": missed_findings,
     }
 
 
