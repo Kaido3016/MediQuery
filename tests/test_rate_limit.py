@@ -72,3 +72,12 @@ def test_production_limiter_fails_closed_when_redis_is_unavailable(monkeypatch):
                 fail_closed=True,
             )
         )
+
+
+def test_request_budgets_distinguish_uploads_from_report_reads():
+    from src.api.main import _request_limit
+
+    assert _request_limit("POST", "/api/reports") == (5, "report-upload")
+    assert _request_limit("GET", "/api/reports") == (60, "report-read")
+    assert _request_limit("DELETE", "/api/reports/report-id") == (10, "report-delete")
+    assert _request_limit("POST", "/api/auth/login") == (10, "auth")
