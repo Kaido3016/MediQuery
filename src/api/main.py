@@ -48,7 +48,7 @@ app.add_middleware(
 app.include_router(search.router, prefix="/api/search", tags=["search"])
 app.include_router(auth.router, prefix="/api/auth", tags=["authentication"])
 app.include_router(reports.router, prefix="/api/reports", tags=["reports"])
-app.include_router(billing.router, prefix="/api/billing", tags=["billing"))
+app.include_router(billing.router, prefix="/api/billing", tags=["billing"])
 
 
 def _request_limit(path: str) -> tuple[int, str]:
