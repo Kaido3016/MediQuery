@@ -43,6 +43,11 @@ class TotpRequest(BaseModel):
     code: str = Field(min_length=6, max_length=8)
 
 
+class MfaDisableRequest(BaseModel):
+    code: str = Field(min_length=6, max_length=8)
+    password: str = Field(min_length=12, max_length=128)
+
+
 class AuthResponse(BaseModel):
     access_token: str | None = None
     token_type: Literal["bearer"] = "bearer"
