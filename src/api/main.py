@@ -76,7 +76,7 @@ async def security_headers(request: Request, call_next):
     if request.url.path.startswith("/api/"):
         limit, bucket = _request_limit(request.method, request.url.path)
         try:
-            allowed = await rate_limiter.allowed(
+            allowed = await rate_limiter.allowed_async(
                 f"{bucket}:{client_host}",
                 limit=limit,
                 window_seconds=60,
