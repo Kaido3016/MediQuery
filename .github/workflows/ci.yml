@@ -29,10 +29,10 @@ jobs:
       - name: Verify fresh database migration
         run: DATABASE_URL=sqlite:///./migration-ci.db alembic upgrade head
       - name: Verify formatting (do not rewrite files in CI)
-        run: python -m black --check src tests app.py
-      - run: python -m flake8 src tests app.py --max-line-length=120
+        run: python -m black --check src tests app.py evaluation ops
+      - run: python -m flake8 src tests app.py evaluation ops --max-line-length=120
       - run: python -m pytest -q
-      - run: python -m compileall -q src app.py
+      - run: python -m compileall -q src app.py evaluation ops
       - name: Scan for common credential shapes
         run: |
           ! grep -RInE --exclude-dir=.git --exclude-dir=mediqueryvenv310 --exclude='*.ipynb' \
@@ -85,3 +85,20 @@ jobs:
             'METRICS_TOKEN=ci-only-metrics-secret-that-is-long-enough' \
             'FORWARDED_ALLOW_IPS=127.0.0.1' > .env
           docker compose config --quiet
+
+  terraform-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+      - name: Check Terraform formatting
+        run: terraform fmt -check -recursive infra/aws
+      - name: Validate AWS infrastructure module
+        working-directory: infra/aws
+        run: |
+          terraform init -backend=false
+          terraform validate
