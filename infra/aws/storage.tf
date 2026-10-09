@@ -60,6 +60,14 @@ resource "aws_s3_bucket_lifecycle_configuration" "reports" {
       days_after_initiation = 1
     }
   }
+  rule {
+    id     = "remove-expired-delete-markers"
+    status = "Enabled"
+    filter {}
+    expiration {
+      expired_object_delete_marker = true
+    }
+  }
 }
 
 resource "aws_s3_bucket_policy" "reports_require_tls" {

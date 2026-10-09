@@ -27,7 +27,6 @@ resource "aws_iam_role_policy_attachment" "restore" {
 
 resource "aws_backup_plan" "mediquery" {
   name = "${var.name_prefix}-daily-rds"
-
   rule {
     rule_name         = "daily-encrypted-rds-backup"
     target_vault_name = aws_backup_vault.mediquery.name
@@ -55,6 +54,19 @@ resource "aws_sns_topic_subscription" "operations_email" {
   topic_arn = aws_sns_topic.operations.arn
   protocol  = "email"
   endpoint  = var.alarm_email
+}
+
+resource "aws_cloudwatch_metric_alarm" "backup_upload_missing" {
+  alarm_name          = "${var.name_prefix}-postgres-backup-upload-missing"
+  namespace           = "MediQuery/Backup"
+  metric_name         = "BackupUpload"
+  statistic           = "Sum"
+  period              = 86400
+  evaluation_periods  = 2
+  threshold           = 1
+  comparison_operator = "LessThanThreshold"
+  alarm_actions       = [aws_sns_topic.operations.arn]
+  treat_missing_data  = "breaching"
 }
 
 resource "aws_cloudwatch_metric_alarm" "alb_5xx" {
