@@ -15,6 +15,8 @@ from src.core.file_lifecycle import (
 from src.core.observability import metrics
 from src.core.settings import get_settings
 from src.core.security import create_access_token, hash_password, verify_password
+from src.core.settings import get_settings
+import pyotp
 
 router = APIRouter()
 
@@ -49,8 +51,11 @@ def signup(payload: SignUpRequest, db: Session = Depends(get_db)) -> AuthRespons
         )
     )
     db.commit()
+    if get_settings().environment.lower() == "production":
+        from src.api.routes.account_security import send_verification_for_user
+        send_verification_for_user(user, db)
     metrics.increment("accounts.signup")
-    return AuthResponse(access_token=create_access_token(user.id))
+    return AuthResponse(access_token=create_access_token(user.id, user.token_version))
 
 
 @router.post("/login", response_model=AuthResponse)
@@ -62,10 +67,19 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)) -> AuthResponse:
             detail="Invalid email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    db.add(AuditEvent(actor_id=user.id, action="login_succeeded", metadata_json={}))
+    settings = get_settings()
+    if settings.environment.lower() == "production" and not user.email_verified:
+        raise HTTPException(status_code=403, detail="Verify your email before signing in.")
+    if user.mfa_enabled and (
+        not user.mfa_secret
+        or not payload.totp_code
+        or not pyotp.TOTP(user.mfa_secret).verify(payload.totp_code, valid_window=1)
+    ):
+        raise HTTPException(status_code=401, detail="Invalid email, password, or authenticator code")
+    db.add(AuditEvent(actor_id=user.id, action="login_succeeded", metadata_json={"mfa": user.mfa_enabled}))
     db.commit()
     metrics.increment("accounts.login")
-    return AuthResponse(access_token=create_access_token(user.id))
+    return AuthResponse(access_token=create_access_token(user.id, user.token_version))
 
 
 @router.delete("/account", status_code=status.HTTP_204_NO_CONTENT)
