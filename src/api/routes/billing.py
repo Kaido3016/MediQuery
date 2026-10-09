@@ -49,6 +49,30 @@ def checkout(user: User = Depends(current_user)) -> CheckoutResponse:
     metrics.increment("billing.checkout_created")
     return CheckoutResponse(available=True, checkout_url=session.url, message="Continue to Stripe to complete your subscription.")
 
+@router.post("/portal", response_model=CheckoutResponse)
+def billing_portal(user: User = Depends(current_user), db: Session = Depends(get_db)) -> CheckoutResponse:
+    """Create a Stripe customer portal session for subscription management/cancellation."""
+    settings = get_settings()
+    if not settings.stripe_secret_key or not settings.stripe_portal_return_url:
+        raise HTTPException(status_code=503, detail="Billing management is not configured.")
+    subscription = db.scalar(
+        select(Subscription)
+        .where(Subscription.user_id == user.id, Subscription.provider == "stripe")
+        .order_by(Subscription.created_at.desc())
+    )
+    if not subscription or not subscription.external_customer_id:
+        raise HTTPException(status_code=404, detail="No Stripe customer is linked to this account.")
+    stripe.api_key = settings.stripe_secret_key
+    try:
+        session = stripe.billing_portal.Session.create(
+            customer=subscription.external_customer_id,
+            return_url=settings.stripe_portal_return_url,
+        )
+    except Exception as exc:
+        logger.warning("stripe_portal_creation_failed")
+        raise HTTPException(status_code=502, detail="Billing management is temporarily unavailable.") from exc
+    return CheckoutResponse(available=True, checkout_url=session.url, message="Manage or cancel your subscription through Stripe.")
+
 
 def _unix_datetime(value: object) -> datetime | None:
     try:
