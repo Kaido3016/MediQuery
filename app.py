@@ -217,7 +217,27 @@ def dashboard() -> None:
         st.rerun()
     st.sidebar.caption("Educational report organization—not diagnosis.")
     with st.sidebar.expander("Multi-factor authentication"):
-        if st.button("Set up authenticator app", key="mfa-setup"):
+        try:
+            status_response = api("GET", "/api/auth/mfa/status")
+            mfa_enabled = status_response.ok and status_response.json().get("enabled", False)
+        except (requests.RequestException, ValueError):
+            mfa_enabled = False
+        if mfa_enabled:
+            st.caption("Authenticator MFA is enabled for this account.")
+            disable_password = st.text_input("Password to disable MFA", type="password", key="mfa-disable-password")
+            disable_code = st.text_input("Authenticator code to disable MFA", key="mfa-disable-code", max_chars=8)
+            if st.button("Disable MFA", key="mfa-disable"):
+                try:
+                    response = api("POST", "/api/auth/mfa/disable", json={"password": disable_password, "code": disable_code})
+                    if response.ok:
+                        st.session_state.clear()
+                        st.success("MFA disabled. Sign in again.")
+                        st.rerun()
+                    else:
+                        st.error(response.json().get("detail", "Could not disable MFA."))
+                except requests.RequestException:
+                    st.error("MediQuery is unavailable. Please try again shortly.")
+        elif st.button("Set up authenticator app", key="mfa-setup"):
             try:
                 response = api("POST", "/api/auth/mfa/setup")
                 if response.ok:
@@ -237,7 +257,6 @@ def dashboard() -> None:
                     response = api("POST", "/api/auth/mfa/enable", json={"code": mfa_code})
                     if response.ok:
                         st.session_state.clear()
-                        st.success("MFA enabled. Sign in again with an authenticator code.")
                         st.rerun()
                     else:
                         st.error(response.json().get("detail", "Could not enable MFA."))
