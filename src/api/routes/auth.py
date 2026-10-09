@@ -7,7 +7,11 @@ from sqlalchemy.orm import Session
 from src.api.schemas import AuthResponse, LoginRequest, SignUpRequest
 from src.api.dependencies import current_user
 from src.core.database import AuditEvent, Report, User, get_db
-from src.core.file_lifecycle import purge_staged_files, restore_staged_files, stage_files
+from src.core.file_lifecycle import (
+    purge_staged_files,
+    restore_staged_files,
+    stage_files,
+)
 from src.core.observability import metrics
 from src.core.settings import get_settings
 from src.core.security import create_access_token, hash_password, verify_password
