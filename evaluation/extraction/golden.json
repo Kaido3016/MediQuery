@@ -1,0 +1,580 @@
+{
+  "dataset_version": "synthetic-2026-10-08-v1",
+  "purpose": "Synthetic parser regression corpus only; not representative clinical validation.",
+  "cases": [
+    {
+      "id": "synthetic-supported-01",
+      "text": "Hemoglobin: 4.1 g/dL",
+      "expected": [
+        {
+          "name": "Hemoglobin",
+          "value": "4.1",
+          "unit": "g/dL",
+          "reference_range": null,
+          "flag": "high",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "id": "synthetic-supported-02",
+      "text": "WBC: 4.5 mmol/L\nReference Range: 1.4 - 7.7\nFlag: Low",
+      "expected": [
+        {
+          "name": "WBC",
+          "value": "4.5",
+          "unit": "mmol/L",
+          "reference_range": "1.4 - 7.7",
+          "flag": "low",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "id": "synthetic-supported-03",
+      "text": "Platelets: 4.8 mg/dL\nReference Range: 1.6 - 8.0\nFlag: Normal",
+      "expected": [
+        {
+          "name": "Platelets",
+          "value": "4.8",
+          "unit": "mg/dL",
+          "reference_range": "1.6 - 8.0",
+          "flag": "normal",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "id": "synthetic-supported-04",
+      "text": "Glucose: 5.2 10^3/uL",
+      "expected": [
+        {
+          "name": "Glucose",
+          "value": "5.2",
+          "unit": "10^3/uL",
+          "reference_range": null,
+          "flag": "normal",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "id": "synthetic-supported-05",
+      "text": "Sodium: 5.6 10*9/L\nReference Range: 2.0 - 8.6\nFlag: High",
+      "expected": [
+        {
+          "name": "Sodium",
+          "value": "5.6",
+          "unit": "10*9/L",
+          "reference_range": "2.0 - 8.6",
+          "flag": "high",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "id": "synthetic-supported-06",
+      "text": "Potassium: 5.9 %\nReference Range: 2.2 - 8.9\nFlag: Low",
+      "expected": [
+        {
+          "name": "Potassium",
+          "value": "5.9",
+          "unit": "%",
+          "reference_range": "2.2 - 8.9",
+          "flag": "low",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "id": "synthetic-supported-07",
+      "text": "Creatinine: 6.3 U/L",
+      "expected": [
+        {
+          "name": "Creatinine",
+          "value": "6.3",
+          "unit": "U/L",
+          "reference_range": null,
+          "flag": "normal",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "id": "synthetic-supported-08",
+      "text": "Albumin: 6.7 mIU/L\nReference Range: 1.2 - 9.5\nFlag: Normal",
+      "expected": [
+        {
+          "name": "Albumin",
+          "value": "6.7",
+          "unit": "mIU/L",
+          "reference_range": "1.2 - 9.5",
+          "flag": "normal",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "id": "synthetic-supported-09",
+      "text": "Calcium: 7.1 g/dL\nReference Range: 1.4 - 9.8\nFlag: High",
+      "expected": [
+        {
+          "name": "Calcium",
+          "value": "7.1",
+          "unit": "g/dL",
+          "reference_range": "1.4 - 9.8",
+          "flag": "high",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "id": "synthetic-supported-10",
+      "text": "Chloride: 7.4 mmol/L",
+      "expected": [
+        {
+          "name": "Chloride",
+          "value": "7.4",
+          "unit": "mmol/L",
+          "reference_range": null,
+          "flag": "low",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "id": "synthetic-supported-11",
+      "text": "Ferritin: 7.8 mg/dL\nReference Range: 1.8 - 7.7\nFlag: Normal",
+      "expected": [
+        {
+          "name": "Ferritin",
+          "value": "7.8",
+          "unit": "mg/dL",
+          "reference_range": "1.8 - 7.7",
+          "flag": "normal",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "id": "synthetic-supported-12",
+      "text": "CRP: 8.2 10^3/uL\nReference Range: 2.0 - 8.0\nFlag: Normal",
+      "expected": [
+        {
+          "name": "CRP",
+          "value": "8.2",
+          "unit": "10^3/uL",
+          "reference_range": "2.0 - 8.0",
+          "flag": "normal",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "id": "synthetic-supported-13",
+      "text": "ALT: 8.5 10*9/L",
+      "expected": [
+        {
+          "name": "ALT",
+          "value": "8.5",
+          "unit": "10*9/L",
+          "reference_range": null,
+          "flag": "high",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "id": "synthetic-supported-14",
+      "text": "AST: 8.9 %\nReference Range: 2.4 - 8.6\nFlag: Low",
+      "expected": [
+        {
+          "name": "AST",
+          "value": "8.9",
+          "unit": "%",
+          "reference_range": "2.4 - 8.6",
+          "flag": "low",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "id": "synthetic-supported-15",
+      "text": "TSH: 9.3 U/L\nReference Range: 1.2 - 8.9\nFlag: Normal",
+      "expected": [
+        {
+          "name": "TSH",
+          "value": "9.3",
+          "unit": "U/L",
+          "reference_range": "1.2 - 8.9",
+          "flag": "normal",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "id": "synthetic-supported-16",
+      "text": "Vitamin D: 9.6 mIU/L",
+      "expected": [
+        {
+          "name": "Vitamin D",
+          "value": "9.6",
+          "unit": "mIU/L",
+          "reference_range": null,
+          "flag": "normal",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "id": "synthetic-supported-17",
+      "text": "Bilirubin: 10.0 g/dL\nReference Range: 1.6 - 9.5\nFlag: High",
+      "expected": [
+        {
+          "name": "Bilirubin",
+          "value": "10.0",
+          "unit": "g/dL",
+          "reference_range": "1.6 - 9.5",
+          "flag": "high",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "id": "synthetic-supported-18",
+      "text": "Hematocrit: 4.1 mmol/L\nReference Range: 1.8 - 9.8\nFlag: Low",
+      "expected": [
+        {
+          "name": "Hematocrit",
+          "value": "4.1",
+          "unit": "mmol/L",
+          "reference_range": "1.8 - 9.8",
+          "flag": "low",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "id": "synthetic-supported-19",
+      "text": "Neutrophils: 4.5 mg/dL",
+      "expected": [
+        {
+          "name": "Neutrophils",
+          "value": "4.5",
+          "unit": "mg/dL",
+          "reference_range": null,
+          "flag": "normal",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "id": "synthetic-supported-20",
+      "text": "Lymphocytes: 4.8 10^3/uL\nReference Range: 2.2 - 7.7\nFlag: Normal",
+      "expected": [
+        {
+          "name": "Lymphocytes",
+          "value": "4.8",
+          "unit": "10^3/uL",
+          "reference_range": "2.2 - 7.7",
+          "flag": "normal",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "id": "synthetic-supported-21",
+      "text": "Monocytes: 5.2 10*9/L\nReference Range: 2.4 - 8.0\nFlag: High",
+      "expected": [
+        {
+          "name": "Monocytes",
+          "value": "5.2",
+          "unit": "10*9/L",
+          "reference_range": "2.4 - 8.0",
+          "flag": "high",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "id": "synthetic-supported-22",
+      "text": "Eosinophils: 5.6 %",
+      "expected": [
+        {
+          "name": "Eosinophils",
+          "value": "5.6",
+          "unit": "%",
+          "reference_range": null,
+          "flag": "low",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "id": "synthetic-supported-23",
+      "text": "Basophils: 5.9 U/L\nReference Range: 1.4 - 8.6\nFlag: Normal",
+      "expected": [
+        {
+          "name": "Basophils",
+          "value": "5.9",
+          "unit": "U/L",
+          "reference_range": "1.4 - 8.6",
+          "flag": "normal",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "id": "synthetic-supported-24",
+      "text": "MCV: 6.3 mIU/L\nReference Range: 1.6 - 8.9\nFlag: Normal",
+      "expected": [
+        {
+          "name": "MCV",
+          "value": "6.3",
+          "unit": "mIU/L",
+          "reference_range": "1.6 - 8.9",
+          "flag": "normal",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "id": "synthetic-supported-25",
+      "text": "MCH: 6.7 g/dL",
+      "expected": [
+        {
+          "name": "MCH",
+          "value": "6.7",
+          "unit": "g/dL",
+          "reference_range": null,
+          "flag": "high",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "id": "synthetic-supported-26",
+      "text": "MCHC: 7.1 mmol/L\nReference Range: 2.0 - 9.5\nFlag: Low",
+      "expected": [
+        {
+          "name": "MCHC",
+          "value": "7.1",
+          "unit": "mmol/L",
+          "reference_range": "2.0 - 9.5",
+          "flag": "low",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "id": "synthetic-supported-27",
+      "text": "RDW: 7.4 mg/dL\nReference Range: 2.2 - 9.8\nFlag: Normal",
+      "expected": [
+        {
+          "name": "RDW",
+          "value": "7.4",
+          "unit": "mg/dL",
+          "reference_range": "2.2 - 9.8",
+          "flag": "normal",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "id": "synthetic-supported-28",
+      "text": "Urea: 7.8 10^3/uL",
+      "expected": [
+        {
+          "name": "Urea",
+          "value": "7.8",
+          "unit": "10^3/uL",
+          "reference_range": null,
+          "flag": "normal",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "id": "synthetic-supported-29",
+      "text": "eGFR: 8.2 10*9/L\nReference Range: 1.2 - 7.7\nFlag: High",
+      "expected": [
+        {
+          "name": "eGFR",
+          "value": "8.2",
+          "unit": "10*9/L",
+          "reference_range": "1.2 - 7.7",
+          "flag": "high",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "id": "synthetic-supported-30",
+      "text": "Phosphate: 8.5 %\nReference Range: 1.4 - 8.0\nFlag: Low",
+      "expected": [
+        {
+          "name": "Phosphate",
+          "value": "8.5",
+          "unit": "%",
+          "reference_range": "1.4 - 8.0",
+          "flag": "low",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "id": "synthetic-supported-31",
+      "text": "Magnesium: 8.9 U/L",
+      "expected": [
+        {
+          "name": "Magnesium",
+          "value": "8.9",
+          "unit": "U/L",
+          "reference_range": null,
+          "flag": "normal",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "id": "synthetic-supported-32",
+      "text": "Total Protein: 9.3 mIU/L\nReference Range: 1.8 - 8.6\nFlag: Normal",
+      "expected": [
+        {
+          "name": "Total Protein",
+          "value": "9.3",
+          "unit": "mIU/L",
+          "reference_range": "1.8 - 8.6",
+          "flag": "normal",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "id": "synthetic-supported-33",
+      "text": "Triglycerides: 9.6 g/dL\nReference Range: 2.0 - 8.9\nFlag: High",
+      "expected": [
+        {
+          "name": "Triglycerides",
+          "value": "9.6",
+          "unit": "g/dL",
+          "reference_range": "2.0 - 8.9",
+          "flag": "high",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "id": "synthetic-supported-34",
+      "text": "Cholesterol: 10.0 mmol/L",
+      "expected": [
+        {
+          "name": "Cholesterol",
+          "value": "10.0",
+          "unit": "mmol/L",
+          "reference_range": null,
+          "flag": "low",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "id": "synthetic-supported-35",
+      "text": "HDL: 4.1 mg/dL\nReference Range: 2.4 - 9.5\nFlag: Normal",
+      "expected": [
+        {
+          "name": "HDL",
+          "value": "4.1",
+          "unit": "mg/dL",
+          "reference_range": "2.4 - 9.5",
+          "flag": "normal",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "id": "synthetic-supported-36",
+      "text": "LDL: 4.5 10^3/uL\nReference Range: 1.2 - 9.8\nFlag: Normal",
+      "expected": [
+        {
+          "name": "LDL",
+          "value": "4.5",
+          "unit": "10^3/uL",
+          "reference_range": "1.2 - 9.8",
+          "flag": "normal",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "id": "synthetic-negative-01",
+      "text": "Patient Name: Jane Doe",
+      "expected": []
+    },
+    {
+      "id": "synthetic-negative-02",
+      "text": "Date of Birth: 1980-01-01",
+      "expected": []
+    },
+    {
+      "id": "synthetic-negative-03",
+      "text": "Reference Range: 4.0 - 8.0",
+      "expected": []
+    },
+    {
+      "id": "synthetic-negative-04",
+      "text": "Flag: High",
+      "expected": []
+    },
+    {
+      "id": "synthetic-negative-05",
+      "text": "WBC: pending",
+      "expected": []
+    },
+    {
+      "id": "synthetic-negative-06",
+      "text": "Glucose: hemolyzed",
+      "expected": []
+    },
+    {
+      "id": "synthetic-negative-07",
+      "text": "Platelets: see attached",
+      "expected": []
+    },
+    {
+      "id": "synthetic-negative-08",
+      "text": "Result: 12.0 mg/dL",
+      "expected": []
+    },
+    {
+      "id": "synthetic-negative-09",
+      "text": "Comment: follow up in two weeks",
+      "expected": []
+    },
+    {
+      "id": "synthetic-negative-10",
+      "text": "Patient ID: 123456",
+      "expected": []
+    },
+    {
+      "id": "synthetic-negative-11",
+      "text": "Lab Status: Final",
+      "expected": []
+    },
+    {
+      "id": "synthetic-negative-12",
+      "text": "No abnormal results detected",
+      "expected": []
+    },
+    {
+      "id": "synthetic-negative-13",
+      "text": "Blood pressure: 120/80",
+      "expected": []
+    },
+    {
+      "id": "synthetic-negative-14",
+      "text": "Collection Date: 2026-01-01",
+      "expected": []
+    }
+  ]
+}
