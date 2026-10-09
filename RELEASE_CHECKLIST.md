@@ -2,6 +2,13 @@
 
 ## Repository gates
 
+### Phase acceptance
+
+- [ ] Phase 17 acceptance: differentiation evidence and claims are reviewed.
+- [ ] Phase 18 acceptance: medical safety tests and non-claims are reviewed.
+- [ ] Phase 19 acceptance: production-readiness tests and external blockers are reviewed.
+- [ ] Phase 20 acceptance: commercial handoff and buyer evidence are reviewed.
+
 - [ ] Pin the exact release commit SHA.
 - [ ] Black formatting, Flake8 lint, pytest, and compileall pass for src, tests, app.py, evaluation, and ops.
 - [ ] Fresh-database Alembic migration passes; upgrade and rollback/restore are tested on a disposable copy.
@@ -9,7 +16,7 @@
 - [ ] GitHub Actions quality and Terraform validation are green.
 - [ ] Docker build and production Compose configuration validation pass.
 - [ ] CodeQL/dependency/security gates have no unresolved release-blocking findings.
-- [ ] No database, private uploads, .env, PHI, token, or credential-shaped secret is committed.
+- [ ] No local database, private uploads, .env, PHI, token, or credential-shaped secret is committed.
 
 ## Production infrastructure
 
