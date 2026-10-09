@@ -12,8 +12,8 @@ def test_local_limiter_enforces_window(monkeypatch):
     limiter = FixedWindowRateLimiter()
 
     assert limiter.allowed("client", 2, 60)
-    assert asyncio.run(limiter.allowed("client", 2, 60))
-    assert not asyncio.run(limiter.allowed("client", 2, 60))
+    assert limiter.allowed("client", 2, 60)
+    assert not limiter.allowed("client", 2, 60)
 
     clock["now"] = 161.0
     assert asyncio.run(limiter.allowed("client", 2, 60))
@@ -64,7 +64,7 @@ def test_production_limiter_fails_closed_when_redis_is_unavailable(monkeypatch):
     limiter = FixedWindowRateLimiter()
     with pytest.raises(RateLimitBackendUnavailable):
         asyncio.run(
-            limiter.allowed(
+            limiter.allowed_async(
                 "client",
                 10,
                 60,
