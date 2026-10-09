@@ -54,12 +54,16 @@ app.include_router(reports.router, prefix="/api/reports", tags=["reports"])
 app.include_router(billing.router, prefix="/api/billing", tags=["billing"])
 
 
-def _request_limit(path: str) -> tuple[int, str]:
-    """Return tighter budgets for authentication and expensive upload/search paths."""
+def _request_limit(method: str, path: str) -> tuple[int, str]:
+    """Return tighter budgets for authentication, uploads, and literature search."""
     if path.startswith("/api/auth/"):
         return 10, "auth"
+    if path == "/api/reports" and method.upper() == "POST":
+        return 5, "report-upload"
+    if path.startswith("/api/reports/") and method.upper() == "DELETE":
+        return 10, "report-delete"
     if path == "/api/reports" or path.startswith("/api/reports/"):
-        return 10, "reports"
+        return 60, "report-read"
     if path.startswith("/api/search/"):
         return 30, "search"
     return 120, "api"
@@ -70,7 +74,7 @@ async def security_headers(request: Request, call_next):
     request_id = uuid4().hex
     client_host = request.client.host if request.client else "unknown"
     if request.url.path.startswith("/api/"):
-        limit, bucket = _request_limit(request.url.path)
+        limit, bucket = _request_limit(request.method, request.url.path)
         try:
             allowed = await rate_limiter.allowed(
                 f"{bucket}:{client_host}",
