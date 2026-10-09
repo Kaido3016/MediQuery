@@ -11,7 +11,7 @@ def test_local_limiter_enforces_window(monkeypatch):
     monkeypatch.setattr("src.core.rate_limit.monotonic", lambda: clock["now"])
     limiter = FixedWindowRateLimiter()
 
-    assert asyncio.run(limiter.allowed("client", 2, 60))
+    assert limiter.allowed("client", 2, 60)
     assert asyncio.run(limiter.allowed("client", 2, 60))
     assert not asyncio.run(limiter.allowed("client", 2, 60))
 
@@ -22,7 +22,7 @@ def test_local_limiter_enforces_window(monkeypatch):
 def test_local_limiter_bounds_distinct_client_memory():
     limiter = FixedWindowRateLimiter(max_local_keys=2)
     for key in ("one", "two", "three", "four"):
-        assert asyncio.run(limiter.allowed(key, 10, 60))
+        assert limiter.allowed(key, 10, 60)
     assert len(limiter._hits) <= 2
 
 
@@ -30,7 +30,7 @@ def test_production_limiter_fails_closed_without_shared_backend():
     limiter = FixedWindowRateLimiter()
     with pytest.raises(RateLimitBackendUnavailable):
         asyncio.run(
-            limiter.allowed(
+            limiter.allowed_async(
                 "client",
                 10,
                 60,
