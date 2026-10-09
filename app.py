@@ -181,7 +181,7 @@ def signed_out_view() -> None:
     with third:
         st.markdown("### Simple plans")
         st.write(
-            "The Free plan has a configurable report allowance. Pro billing is planned, not active."
+            "The Free plan has a configurable report allowance. Pro upgrades and subscription management use Stripe when configured by the operator."
         )
     st.markdown("### Frequently asked questions")
     with st.expander("Can MediQuery diagnose me?"):
@@ -209,12 +209,43 @@ def signed_out_view() -> None:
 def dashboard() -> None:
     st.sidebar.title("MediQuery")
     if st.sidebar.button("Log out"):
+        try:
+            api("POST", "/api/auth/logout")
+        except requests.RequestException:
+            pass
         st.session_state.clear()
         st.rerun()
     st.sidebar.caption("Educational report organization—not diagnosis.")
+    with st.sidebar.expander("Multi-factor authentication"):
+        if st.button("Set up authenticator app", key="mfa-setup"):
+            try:
+                response = api("POST", "/api/auth/mfa/setup")
+                if response.ok:
+                    st.session_state.mfa_setup = response.json()
+                else:
+                    st.error(response.json().get("detail", "MFA setup is unavailable."))
+            except requests.RequestException:
+                st.error("MediQuery is unavailable. Please try again shortly.")
+        setup = st.session_state.get("mfa_setup")
+        if setup:
+            st.warning("Save this setup secret in your authenticator app. It is shown only during enrollment.")
+            st.code(setup["secret"])
+            st.code(setup["otpauth_uri"])
+            mfa_code = st.text_input("Current authenticator code", key="mfa-enroll-code", max_chars=8)
+            if st.button("Enable MFA", key="mfa-enable"):
+                try:
+                    response = api("POST", "/api/auth/mfa/enable", json={"code": mfa_code})
+                    if response.ok:
+                        st.session_state.clear()
+                        st.success("MFA enabled. Sign in again with an authenticator code.")
+                        st.rerun()
+                    else:
+                        st.error(response.json().get("detail", "Could not enable MFA."))
+                except requests.RequestException:
+                    st.error("MediQuery is unavailable. Please try again shortly.")
     with st.sidebar.expander("Account settings"):
         st.caption(
-            "Deleting your account permanently removes the reports stored by this local deployment."
+            "Deleting your account queues live report deletion. Encrypted backups and older object versions expire on the documented retention schedule, not instantly."
         )
         confirm_delete = st.checkbox(
             "I understand this cannot be undone", key="confirm-account-delete"
@@ -244,6 +275,26 @@ def dashboard() -> None:
         st.error("We could not load your account. Please try again shortly.")
         return
 
+    try:
+        billing = api("GET", "/api/billing/summary")
+        if billing.ok:
+            billing_data = billing.json()
+            if billing_data.get("plan") == "pro" and billing_data.get("subscription_status") in {"active", "trialing"}:
+                st.success("Pro subscription active.")
+                if st.button("Manage or cancel subscription"):
+                    portal = api("POST", "/api/billing/portal")
+                    if portal.ok and portal.json().get("checkout_url"):
+                        st.link_button("Open Stripe billing portal", portal.json()["checkout_url"])
+                    else:
+                        st.error("Billing management is temporarily unavailable.")
+            elif st.button("Upgrade to Pro"):
+                checkout = api("POST", "/api/billing/checkout")
+                if checkout.ok and checkout.json().get("checkout_url"):
+                    st.link_button("Continue to secure Stripe checkout", checkout.json()["checkout_url"])
+                else:
+                    st.info(checkout.json().get("message", "Subscription checkout is not configured."))
+    except (requests.RequestException, ValueError):
+        st.warning("Billing information is temporarily unavailable.")
     upload = st.file_uploader(
         "Upload a text-based PDF report",
         type=["pdf"],
