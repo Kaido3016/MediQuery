@@ -44,8 +44,9 @@ class TotpRequest(BaseModel):
 
 
 class AuthResponse(BaseModel):
-    access_token: str
+    access_token: str | None = None
     token_type: Literal["bearer"] = "bearer"
+    verification_required: bool = False
 
 
 class FindingResponse(BaseModel):
