@@ -15,7 +15,7 @@ from fastapi.responses import JSONResponse
 from src.api.routes import auth, billing, reports, search
 from src.core.database import create_database
 from src.core.observability import elapsed_ms, metrics
-from src.core.rate_limit import rate_limiter
+from src.core.rate_limit import RateLimitBackendUnavailable, rate_limiter
 from src.core.settings import get_settings
 
 logger = logging.getLogger("mediquery.api")
@@ -48,22 +48,48 @@ app.add_middleware(
 app.include_router(search.router, prefix="/api/search", tags=["search"])
 app.include_router(auth.router, prefix="/api/auth", tags=["authentication"])
 app.include_router(reports.router, prefix="/api/reports", tags=["reports"])
-app.include_router(billing.router, prefix="/api/billing", tags=["billing"])
+app.include_router(billing.router, prefix="/api/billing", tags=["billing"))
+
+
+def _request_limit(path: str) -> tuple[int, str]:
+    """Return tighter budgets for authentication and expensive upload/search paths."""
+    if path.startswith("/api/auth/"):
+        return 10, "auth"
+    if path == "/api/reports" or path.startswith("/api/reports/"):
+        return 10, "reports"
+    if path.startswith("/api/search/"):
+        return 30, "search"
+    return 120, "api"
 
 
 @app.middleware("http")
 async def security_headers(request: Request, call_next):
     request_id = uuid4().hex
     client_host = request.client.host if request.client else "unknown"
-    if request.url.path.startswith("/api/") and not rate_limiter.allowed(
-        f"api:{client_host}", limit=120, window_seconds=60
-    ):
-        metrics.increment("api.rate_limited")
-        return JSONResponse(
-            status_code=429,
-            content={"detail": "Too many requests. Please try again shortly."},
-            headers={"Retry-After": "60", "X-Request-ID": request_id},
-        )
+    if request.url.path.startswith("/api/"):
+        limit, bucket = _request_limit(request.url.path)
+        try:
+            allowed = await rate_limiter.allowed(
+                f"{bucket}:{client_host}",
+                limit=limit,
+                window_seconds=60,
+                redis_url=settings.rate_limit_redis_url,
+                fail_closed=settings.environment.lower() == "production",
+            )
+        except RateLimitBackendUnavailable:
+            logger.error("rate_limit_backend_unavailable request_id=%s", request_id)
+            return JSONResponse(
+                status_code=503,
+                content={"detail": "Service temporarily unavailable."},
+                headers={"Retry-After": "5", "X-Request-ID": request_id},
+            )
+        if not allowed:
+            metrics.increment("api.rate_limited")
+            return JSONResponse(
+                status_code=429,
+                content={"detail": "Too many requests. Please try again shortly."},
+                headers={"Retry-After": "60", "X-Request-ID": request_id},
+            )
     started = perf_counter()
     try:
         response = await call_next(request)
