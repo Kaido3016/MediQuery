@@ -22,6 +22,18 @@ router = APIRouter()
 logger = logging.getLogger("mediquery.account_security")
 
 
+def send_verification_for_user(user: User, db: Session) -> None:
+    raw = issue_account_token(db, user.id, "verify_email")
+    db.commit()
+    settings = get_settings()
+    link = f"{settings.frontend_base_url.rstrip('/')}/?verify_email_token={quote(raw)}"
+    try:
+        send_account_email(user.email, "Verify your MediQuery email", f"Open MediQuery and confirm your email:\\n\\n{link}\\n\\nThis link expires in {settings.email_token_minutes} minutes.")
+    except Exception as exc:
+        logger.warning("account_email_delivery_failed purpose=verify_email")
+        raise HTTPException(status_code=503, detail="Email delivery is temporarily unavailable.") from exc
+
+
 @router.post("/verification/resend", status_code=202)
 def resend_verification(payload: PasswordResetRequest, db: Session = Depends(get_db)) -> dict[str, str]:
     user = db.scalar(select(User).where(User.email == payload.email.strip().lower()))
