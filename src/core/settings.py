@@ -72,6 +72,10 @@ class Settings(BaseSettings):
                 raise RuntimeError(
                     "Production requires a managed database; SQLite is development-only"
                 )
+            if not self.rate_limit_redis_url:
+                raise RuntimeError(
+                    "RATE_LIMIT_REDIS_URL is required in production for shared rate limiting"
+                )
             if any(origin.startswith("http://") for origin in self.cors_origins):
                 raise RuntimeError("Production CORS origins must use HTTPS")
             if self.metrics_token is not None and len(self.metrics_token) < 32:
@@ -116,10 +120,6 @@ class Settings(BaseSettings):
             ):
                 raise RuntimeError(
                     "Production billing requires complete Stripe configuration"
-                )
-            if not self.rate_limit_redis_url:
-                raise RuntimeError(
-                    "RATE_LIMIT_REDIS_URL is required in production for shared rate limiting"
                 )
 
 
