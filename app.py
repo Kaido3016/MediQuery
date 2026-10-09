@@ -45,7 +45,7 @@ def api(method: str, path: str, **kwargs: Any) -> requests.Response:
     )
 
 
-def request_auth(mode: str, email: str, password: str, acknowledged: bool) -> None:
+def request_auth(mode: str, email: str, password: str, acknowledged: bool, totp_code: str = "") -> None:
     try:
         response = api(
             "POST",
@@ -54,6 +54,7 @@ def request_auth(mode: str, email: str, password: str, acknowledged: bool) -> No
                 "email": email,
                 "password": password,
                 "acknowledge_medical_limitations": acknowledged,
+                **({"totp_code": totp_code} if totp_code else {}),
             },
         )
         if response.ok:
@@ -128,6 +129,7 @@ def signed_out_view() -> None:
         password = st.text_input(
             "Password", type="password", help="Use at least 12 characters."
         )
+        totp_code = st.text_input("Authenticator code (if MFA is enabled)", max_chars=8)
         acknowledged = st.checkbox(
             "I understand MediQuery is not medical advice or a diagnostic service.",
             disabled=mode == "Log in",
@@ -138,6 +140,7 @@ def signed_out_view() -> None:
                 email,
                 password,
                 acknowledged or mode == "Log in",
+                totp_code,
             )
         st.markdown("</div>", unsafe_allow_html=True)
     with st.expander("Forgot your password or need another verification email?"):
