@@ -26,6 +26,7 @@ services:
       STRIPE_PRICE_ID: ${STRIPE_PRICE_ID:?Set the Stripe recurring price ID}
       STRIPE_SUCCESS_URL: ${STRIPE_SUCCESS_URL:?Set the HTTPS checkout success URL}
       STRIPE_CANCEL_URL: ${STRIPE_CANCEL_URL:?Set the HTTPS checkout cancel URL}
+      STRIPE_PORTAL_RETURN_URL: ${STRIPE_PORTAL_RETURN_URL:?Set the HTTPS billing portal return URL}
       METRICS_TOKEN: ${METRICS_TOKEN:?Set a metrics bearer secret}
       FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS:?Set only trusted proxy IPs}
       UPLOAD_ROOT: /data/uploads
