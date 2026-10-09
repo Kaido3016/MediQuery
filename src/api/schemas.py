@@ -23,6 +23,24 @@ class LoginRequest(BaseModel):
         pattern=r"^[^\s@]+@[^\s@]+\.[^\s@]+$",
     )
     password: str = Field(min_length=12, max_length=128)
+    totp_code: str | None = Field(default=None, min_length=6, max_length=8)
+
+
+class TokenRequest(BaseModel):
+    token: str = Field(min_length=20, max_length=256)
+
+
+class PasswordResetRequest(BaseModel):
+    email: str = Field(min_length=3, max_length=320, pattern=r"^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")
+
+
+class PasswordResetConfirm(BaseModel):
+    token: str = Field(min_length=20, max_length=256)
+    new_password: str = Field(min_length=12, max_length=128)
+
+
+class TotpRequest(BaseModel):
+    code: str = Field(min_length=6, max_length=8)
 
 
 class AuthResponse(BaseModel):
