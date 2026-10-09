@@ -45,7 +45,9 @@ def api(method: str, path: str, **kwargs: Any) -> requests.Response:
     )
 
 
-def request_auth(mode: str, email: str, password: str, acknowledged: bool, totp_code: str = "") -> None:
+def request_auth(
+    mode: str, email: str, password: str, acknowledged: bool, totp_code: str = ""
+) -> None:
     try:
         response = api(
             "POST",
@@ -64,7 +66,9 @@ def request_auth(mode: str, email: str, password: str, acknowledged: bool, totp_
                 st.session_state.access_token = token
                 st.rerun()
             if result.get("verification_required"):
-                st.success("Account created. Check your email to verify the address before signing in.")
+                st.success(
+                    "Account created. Check your email to verify the address before signing in."
+                )
                 return
         st.error(response.json().get("detail", "We could not complete that request."))
     except (requests.RequestException, ValueError):
@@ -79,17 +83,25 @@ def signed_out_view() -> None:
         st.info("Confirm your email address to finish account setup.")
         if st.button("Verify email address", type="primary"):
             try:
-                response = api("POST", "/api/auth/verify-email", json={"token": verify_token})
+                response = api(
+                    "POST", "/api/auth/verify-email", json={"token": verify_token}
+                )
                 if response.ok:
                     st.success("Email verified. You can now log in.")
                     st.experimental_set_query_params()
                 else:
-                    st.error(response.json().get("detail", "Verification link is invalid or expired."))
+                    st.error(
+                        response.json().get(
+                            "detail", "Verification link is invalid or expired."
+                        )
+                    )
             except requests.RequestException:
                 st.error("MediQuery is unavailable. Please try again shortly.")
     if reset_token:
         with st.form("password_reset_form"):
-            new_password = st.text_input("New password", type="password", help="Use at least 12 characters.")
+            new_password = st.text_input(
+                "New password", type="password", help="Use at least 12 characters."
+            )
             confirm_password = st.text_input("Confirm new password", type="password")
             submitted = st.form_submit_button("Reset password")
         if submitted:
@@ -97,12 +109,20 @@ def signed_out_view() -> None:
                 st.error("The passwords do not match.")
             else:
                 try:
-                    response = api("POST", "/api/auth/password-reset/confirm", json={"token": reset_token, "new_password": new_password})
+                    response = api(
+                        "POST",
+                        "/api/auth/password-reset/confirm",
+                        json={"token": reset_token, "new_password": new_password},
+                    )
                     if response.ok:
                         st.success("Password changed. Log in with your new password.")
                         st.experimental_set_query_params()
                     else:
-                        st.error(response.json().get("detail", "Reset link is invalid or expired."))
+                        st.error(
+                            response.json().get(
+                                "detail", "Reset link is invalid or expired."
+                            )
+                        )
                 except requests.RequestException:
                     st.error("MediQuery is unavailable. Please try again shortly.")
     st.title("Understand the facts in your lab report")
@@ -149,9 +169,18 @@ def signed_out_view() -> None:
         with recovery_left:
             if st.button("Send password-reset email"):
                 try:
-                    response = api("POST", "/api/auth/password-reset/request", json={"email": recovery_email})
+                    response = api(
+                        "POST",
+                        "/api/auth/password-reset/request",
+                        json={"email": recovery_email},
+                    )
                     if response.ok:
-                        st.success(response.json().get("message", "If the account exists, an email will be sent."))
+                        st.success(
+                            response.json().get(
+                                "message",
+                                "If the account exists, an email will be sent.",
+                            )
+                        )
                     else:
                         st.error("Could not request a password reset.")
                 except requests.RequestException:
@@ -159,9 +188,18 @@ def signed_out_view() -> None:
         with recovery_right:
             if st.button("Resend verification email"):
                 try:
-                    response = api("POST", "/api/auth/verification/resend", json={"email": recovery_email})
+                    response = api(
+                        "POST",
+                        "/api/auth/verification/resend",
+                        json={"email": recovery_email},
+                    )
                     if response.ok:
-                        st.success(response.json().get("message", "If verification is needed, an email will be sent."))
+                        st.success(
+                            response.json().get(
+                                "message",
+                                "If verification is needed, an email will be sent.",
+                            )
+                        )
                     else:
                         st.error("Could not request verification.")
                 except requests.RequestException:
@@ -219,22 +257,34 @@ def dashboard() -> None:
     with st.sidebar.expander("Multi-factor authentication"):
         try:
             status_response = api("GET", "/api/auth/mfa/status")
-            mfa_enabled = status_response.ok and status_response.json().get("enabled", False)
+            mfa_enabled = status_response.ok and status_response.json().get(
+                "enabled", False
+            )
         except (requests.RequestException, ValueError):
             mfa_enabled = False
         if mfa_enabled:
             st.caption("Authenticator MFA is enabled for this account.")
-            disable_password = st.text_input("Password to disable MFA", type="password", key="mfa-disable-password")
-            disable_code = st.text_input("Authenticator code to disable MFA", key="mfa-disable-code", max_chars=8)
+            disable_password = st.text_input(
+                "Password to disable MFA", type="password", key="mfa-disable-password"
+            )
+            disable_code = st.text_input(
+                "Authenticator code to disable MFA", key="mfa-disable-code", max_chars=8
+            )
             if st.button("Disable MFA", key="mfa-disable"):
                 try:
-                    response = api("POST", "/api/auth/mfa/disable", json={"password": disable_password, "code": disable_code})
+                    response = api(
+                        "POST",
+                        "/api/auth/mfa/disable",
+                        json={"password": disable_password, "code": disable_code},
+                    )
                     if response.ok:
                         st.session_state.clear()
                         st.success("MFA disabled. Sign in again.")
                         st.rerun()
                     else:
-                        st.error(response.json().get("detail", "Could not disable MFA."))
+                        st.error(
+                            response.json().get("detail", "Could not disable MFA.")
+                        )
                 except requests.RequestException:
                     st.error("MediQuery is unavailable. Please try again shortly.")
         elif st.button("Set up authenticator app", key="mfa-setup"):
@@ -248,13 +298,19 @@ def dashboard() -> None:
                 st.error("MediQuery is unavailable. Please try again shortly.")
         setup = st.session_state.get("mfa_setup")
         if setup:
-            st.warning("Save this setup secret in your authenticator app. It is shown only during enrollment.")
+            st.warning(
+                "Save this setup secret in your authenticator app. It is shown only during enrollment."
+            )
             st.code(setup["secret"])
             st.code(setup["otpauth_uri"])
-            mfa_code = st.text_input("Current authenticator code", key="mfa-enroll-code", max_chars=8)
+            mfa_code = st.text_input(
+                "Current authenticator code", key="mfa-enroll-code", max_chars=8
+            )
             if st.button("Enable MFA", key="mfa-enable"):
                 try:
-                    response = api("POST", "/api/auth/mfa/enable", json={"code": mfa_code})
+                    response = api(
+                        "POST", "/api/auth/mfa/enable", json={"code": mfa_code}
+                    )
                     if response.ok:
                         st.session_state.clear()
                         st.rerun()
@@ -298,20 +354,31 @@ def dashboard() -> None:
         billing = api("GET", "/api/billing/summary")
         if billing.ok:
             billing_data = billing.json()
-            if billing_data.get("plan") == "pro" and billing_data.get("subscription_status") in {"active", "trialing"}:
+            if billing_data.get("plan") == "pro" and billing_data.get(
+                "subscription_status"
+            ) in {"active", "trialing"}:
                 st.success("Pro subscription active.")
                 if st.button("Manage or cancel subscription"):
                     portal = api("POST", "/api/billing/portal")
                     if portal.ok and portal.json().get("checkout_url"):
-                        st.link_button("Open Stripe billing portal", portal.json()["checkout_url"])
+                        st.link_button(
+                            "Open Stripe billing portal", portal.json()["checkout_url"]
+                        )
                     else:
                         st.error("Billing management is temporarily unavailable.")
             elif st.button("Upgrade to Pro"):
                 checkout = api("POST", "/api/billing/checkout")
                 if checkout.ok and checkout.json().get("checkout_url"):
-                    st.link_button("Continue to secure Stripe checkout", checkout.json()["checkout_url"])
+                    st.link_button(
+                        "Continue to secure Stripe checkout",
+                        checkout.json()["checkout_url"],
+                    )
                 else:
-                    st.info(checkout.json().get("message", "Subscription checkout is not configured."))
+                    st.info(
+                        checkout.json().get(
+                            "message", "Subscription checkout is not configured."
+                        )
+                    )
     except (requests.RequestException, ValueError):
         st.warning("Billing information is temporarily unavailable.")
     upload = st.file_uploader(

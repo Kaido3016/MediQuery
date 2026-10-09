@@ -55,7 +55,9 @@ app.add_middleware(
 
 app.include_router(search.router, prefix="/api/search", tags=["search"])
 app.include_router(auth.router, prefix="/api/auth", tags=["authentication"])
-app.include_router(account_security.router, prefix="/api/auth", tags=["account security"])
+app.include_router(
+    account_security.router, prefix="/api/auth", tags=["account security"]
+)
 app.include_router(reports.router, prefix="/api/reports", tags=["reports"])
 app.include_router(billing.router, prefix="/api/billing", tags=["billing"])
 
@@ -173,7 +175,11 @@ async def readiness_check():
     if settings.environment.lower() == "production":
         client = None
         try:
-            client = Redis.from_url(settings.rate_limit_redis_url, socket_connect_timeout=2, socket_timeout=2)
+            client = Redis.from_url(
+                settings.rate_limit_redis_url,
+                socket_connect_timeout=2,
+                socket_timeout=2,
+            )
             checks["rate_limit"] = bool(await client.ping())
         except Exception:
             checks["rate_limit"] = False

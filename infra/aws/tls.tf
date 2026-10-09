@@ -4,11 +4,11 @@ locals {
 
 resource "aws_lb_listener" "https" {
   count             = local.configure_https_listener ? 1 : 0
-  load_balancer_arn  = var.protected_alb_arn
+  load_balancer_arn = var.protected_alb_arn
   port              = 443
-  protocol           = "HTTPS"
-  certificate_arn    = var.acm_certificate_arn
-  ssl_policy         = "ELBSecurityPolicy-TLS13-1-2-2021-06"
+  protocol          = "HTTPS"
+  certificate_arn   = var.acm_certificate_arn
+  ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-2021-06"
 
   default_action {
     type             = "forward"
@@ -18,9 +18,9 @@ resource "aws_lb_listener" "https" {
 
 resource "aws_lb_listener" "http_redirect" {
   count             = local.configure_https_listener ? 1 : 0
-  load_balancer_arn  = var.protected_alb_arn
+  load_balancer_arn = var.protected_alb_arn
   port              = 80
-  protocol           = "HTTP"
+  protocol          = "HTTP"
 
   default_action {
     type = "redirect"

@@ -15,7 +15,9 @@ def encrypt_mfa_secret(secret: str) -> str:
     if not settings.object_storage_kms_key_id:
         raise RuntimeError("MFA secret encryption requires the configured KMS key")
     try:
-        result = boto3.client("kms", region_name=settings.object_storage_region).encrypt(
+        result = boto3.client(
+            "kms", region_name=settings.object_storage_region
+        ).encrypt(
             KeyId=settings.object_storage_kms_key_id,
             Plaintext=secret.encode("utf-8"),
             EncryptionContext={"application": "MediQuery", "purpose": "TOTP"},
@@ -32,7 +34,9 @@ def decrypt_mfa_secret(stored: str) -> str:
     if not stored.startswith("kms$") or not settings.object_storage_kms_key_id:
         raise RuntimeError("MFA secret cannot be decrypted with current configuration")
     try:
-        result = boto3.client("kms", region_name=settings.object_storage_region).decrypt(
+        result = boto3.client(
+            "kms", region_name=settings.object_storage_region
+        ).decrypt(
             KeyId=settings.object_storage_kms_key_id,
             CiphertextBlob=base64.b64decode(stored.removeprefix("kms$")),
             EncryptionContext={"application": "MediQuery", "purpose": "TOTP"},

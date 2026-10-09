@@ -16,7 +16,9 @@ def current_user(
     db: Session = Depends(get_db),
 ) -> User:
     user_id = decode_access_token(credentials.credentials) if credentials else None
-    token_version = access_token_version(credentials.credentials) if credentials else None
+    token_version = (
+        access_token_version(credentials.credentials) if credentials else None
+    )
     user = db.get(User, user_id) if user_id else None
     if not user or token_version is None or token_version != user.token_version:
         raise HTTPException(

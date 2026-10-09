@@ -24,8 +24,7 @@ def evaluate() -> dict[str, object]:
             for item in expected
         }
         predicted_by_key = {
-            (item.name.casefold(), item.value, item.unit): item
-            for item in predicted
+            (item.name.casefold(), item.value, item.unit): item for item in predicted
         }
         matched = set(expected_by_key) & set(predicted_by_key)
         tp = len(matched)
@@ -50,7 +49,9 @@ def evaluate() -> dict[str, object]:
         "dataset_version": dataset["dataset_version"],
         "scope": "synthetic parser regression only; not clinical validation",
         "case_count": len(dataset["cases"]),
-        "labeled_finding_count": sum(len(case["expected"]) for case in dataset["cases"]),
+        "labeled_finding_count": sum(
+            len(case["expected"]) for case in dataset["cases"]
+        ),
         "true_positive": true_positive,
         "false_positive": false_positive,
         "false_negative": false_negative,

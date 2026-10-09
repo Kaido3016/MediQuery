@@ -13,14 +13,25 @@ from sqlalchemy.orm import Session, selectinload
 from src.api.dependencies import current_user
 from src.api.schemas import PlanResponse, ReportResponse
 from src.core.billing import can_consume, current_usage, get_plan, record_usage
-from src.core.database import AuditEvent, Report, ReportFinding, StorageDeletion, User, get_db
+from src.core.database import (
+    AuditEvent,
+    Report,
+    ReportFinding,
+    StorageDeletion,
+    User,
+    get_db,
+)
 from src.core.file_lifecycle import (
     purge_staged_files,
     restore_staged_files,
     stage_files,
 )
 from src.core.observability import elapsed_ms, metrics
-from src.core.malware_scan import MalwareDetected, MalwareScannerUnavailable, scan_upload
+from src.core.malware_scan import (
+    MalwareDetected,
+    MalwareScannerUnavailable,
+    scan_upload,
+)
 from src.core.storage import StorageUnavailable, delete_report, put_report
 from src.core.settings import get_settings
 from src.services.report_analysis import (
@@ -87,11 +98,15 @@ async def upload_report(
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except MalwareDetected as exc:
         metrics.increment("reports.malware_rejected")
-        raise HTTPException(status_code=422, detail="The uploaded file failed security scanning.") from exc
+        raise HTTPException(
+            status_code=422, detail="The uploaded file failed security scanning."
+        ) from exc
     except MalwareScannerUnavailable as exc:
         logger.error("reports.scanner_unavailable")
         metrics.increment("reports.scanner_unavailable")
-        raise HTTPException(status_code=503, detail="Document scanning is temporarily unavailable.") from exc
+        raise HTTPException(
+            status_code=503, detail="Document scanning is temporarily unavailable."
+        ) from exc
     finally:
         await file.close()
 
@@ -101,7 +116,10 @@ async def upload_report(
         await asyncio.to_thread(put_report, storage_key, raw)
     except StorageUnavailable as exc:
         metrics.increment("reports.storage_write_failed")
-        raise HTTPException(status_code=503, detail="Private document storage is temporarily unavailable.") from exc
+        raise HTTPException(
+            status_code=503,
+            detail="Private document storage is temporarily unavailable.",
+        ) from exc
 
     report = Report(
         id=report_id,
@@ -144,7 +162,11 @@ async def upload_report(
         try:
             await asyncio.to_thread(delete_report, storage_key)
         except StorageUnavailable:
-            db.add(StorageDeletion(storage_key=storage_key, last_error="upload_rollback_cleanup_failed"))
+            db.add(
+                StorageDeletion(
+                    storage_key=storage_key, last_error="upload_rollback_cleanup_failed"
+                )
+            )
             db.commit()
             logger.error("report_upload_orphan_queued_for_cleanup")
         raise

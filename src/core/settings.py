@@ -90,16 +90,33 @@ class Settings(BaseSettings):
             ):
                 raise RuntimeError("Production Stripe redirect URLs must use HTTPS")
             if self.storage_backend != "s3":
-                raise RuntimeError("Production requires private S3-compatible object storage")
+                raise RuntimeError(
+                    "Production requires private S3-compatible object storage"
+                )
             if not self.object_storage_bucket or not self.object_storage_kms_key_id:
-                raise RuntimeError("Production object storage bucket and KMS key are required")
+                raise RuntimeError(
+                    "Production object storage bucket and KMS key are required"
+                )
             if not self.clamav_host:
-                raise RuntimeError("Production requires a configured malware-scanning service")
+                raise RuntimeError(
+                    "Production requires a configured malware-scanning service"
+                )
             if not all((self.smtp_host, self.smtp_from_email)):
-                raise RuntimeError("Production requires SMTP delivery for account security emails")
-            if not all((self.stripe_secret_key, self.stripe_webhook_secret, self.stripe_price_id,
-                        self.stripe_success_url, self.stripe_cancel_url)):
-                raise RuntimeError("Production billing requires complete Stripe configuration")
+                raise RuntimeError(
+                    "Production requires SMTP delivery for account security emails"
+                )
+            if not all(
+                (
+                    self.stripe_secret_key,
+                    self.stripe_webhook_secret,
+                    self.stripe_price_id,
+                    self.stripe_success_url,
+                    self.stripe_cancel_url,
+                )
+            ):
+                raise RuntimeError(
+                    "Production billing requires complete Stripe configuration"
+                )
             if not self.rate_limit_redis_url:
                 raise RuntimeError(
                     "RATE_LIMIT_REDIS_URL is required in production for shared rate limiting"

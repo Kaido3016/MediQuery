@@ -20,16 +20,29 @@ logger = logging.getLogger("mediquery.billing")
 
 
 @router.get("/summary", response_model=BillingResponse)
-def summary(user: User = Depends(current_user), db: Session = Depends(get_db)) -> BillingResponse:
+def summary(
+    user: User = Depends(current_user), db: Session = Depends(get_db)
+) -> BillingResponse:
     return BillingResponse(**billing_summary(db, user))
 
 
 @router.post("/checkout", response_model=CheckoutResponse)
 def checkout(user: User = Depends(current_user)) -> CheckoutResponse:
     settings = get_settings()
-    if not all((settings.stripe_secret_key, settings.stripe_price_id, settings.stripe_success_url, settings.stripe_cancel_url)):
+    if not all(
+        (
+            settings.stripe_secret_key,
+            settings.stripe_price_id,
+            settings.stripe_success_url,
+            settings.stripe_cancel_url,
+        )
+    ):
         metrics.increment("billing.checkout_unconfigured")
-        return CheckoutResponse(available=False, checkout_url=None, message="Subscription checkout is not configured.")
+        return CheckoutResponse(
+            available=False,
+            checkout_url=None,
+            message="Subscription checkout is not configured.",
+        )
     stripe.api_key = settings.stripe_secret_key
     try:
         session = stripe.checkout.Session.create(
@@ -45,23 +58,36 @@ def checkout(user: User = Depends(current_user)) -> CheckoutResponse:
         )
     except Exception as exc:
         logger.warning("stripe_checkout_creation_failed")
-        raise HTTPException(status_code=502, detail="Checkout is temporarily unavailable.") from exc
+        raise HTTPException(
+            status_code=502, detail="Checkout is temporarily unavailable."
+        ) from exc
     metrics.increment("billing.checkout_created")
-    return CheckoutResponse(available=True, checkout_url=session.url, message="Continue to Stripe to complete your subscription.")
+    return CheckoutResponse(
+        available=True,
+        checkout_url=session.url,
+        message="Continue to Stripe to complete your subscription.",
+    )
+
 
 @router.post("/portal", response_model=CheckoutResponse)
-def billing_portal(user: User = Depends(current_user), db: Session = Depends(get_db)) -> CheckoutResponse:
+def billing_portal(
+    user: User = Depends(current_user), db: Session = Depends(get_db)
+) -> CheckoutResponse:
     """Create a Stripe customer portal session for subscription management/cancellation."""
     settings = get_settings()
     if not settings.stripe_secret_key or not settings.stripe_portal_return_url:
-        raise HTTPException(status_code=503, detail="Billing management is not configured.")
+        raise HTTPException(
+            status_code=503, detail="Billing management is not configured."
+        )
     subscription = db.scalar(
         select(Subscription)
         .where(Subscription.user_id == user.id, Subscription.provider == "stripe")
         .order_by(Subscription.created_at.desc())
     )
     if not subscription or not subscription.external_customer_id:
-        raise HTTPException(status_code=404, detail="No Stripe customer is linked to this account.")
+        raise HTTPException(
+            status_code=404, detail="No Stripe customer is linked to this account."
+        )
     stripe.api_key = settings.stripe_secret_key
     try:
         session = stripe.billing_portal.Session.create(
@@ -70,8 +96,14 @@ def billing_portal(user: User = Depends(current_user), db: Session = Depends(get
         )
     except Exception as exc:
         logger.warning("stripe_portal_creation_failed")
-        raise HTTPException(status_code=502, detail="Billing management is temporarily unavailable.") from exc
-    return CheckoutResponse(available=True, checkout_url=session.url, message="Manage or cancel your subscription through Stripe.")
+        raise HTTPException(
+            status_code=502, detail="Billing management is temporarily unavailable."
+        ) from exc
+    return CheckoutResponse(
+        available=True,
+        checkout_url=session.url,
+        message="Manage or cancel your subscription through Stripe.",
+    )
 
 
 def _unix_datetime(value: object) -> datetime | None:
@@ -82,18 +114,34 @@ def _unix_datetime(value: object) -> datetime | None:
 
 
 def _apply_subscription_event(db: Session, event_type: str, obj: dict) -> None:
-    subscription_id = obj.get("id") if event_type.startswith("customer.subscription.") else obj.get("subscription")
+    subscription_id = (
+        obj.get("id")
+        if event_type.startswith("customer.subscription.")
+        else obj.get("subscription")
+    )
     if not subscription_id:
         return
     subscription_data = obj if event_type.startswith("customer.subscription.") else {}
     metadata = subscription_data.get("metadata") or obj.get("metadata") or {}
     user_id_raw = metadata.get("user_id") or obj.get("client_reference_id")
-    existing = db.scalar(select(Subscription).where(Subscription.external_subscription_id == str(subscription_id)))
-    user = db.get(User, int(user_id_raw)) if user_id_raw and str(user_id_raw).isdigit() else (db.get(User, existing.user_id) if existing else None)
+    existing = db.scalar(
+        select(Subscription).where(
+            Subscription.external_subscription_id == str(subscription_id)
+        )
+    )
+    user = (
+        db.get(User, int(user_id_raw))
+        if user_id_raw and str(user_id_raw).isdigit()
+        else (db.get(User, existing.user_id) if existing else None)
+    )
     if not user:
         logger.warning("stripe_subscription_event_unmatched")
         return
-    default_status = "active" if event_type == "checkout.session.completed" else ("past_due" if event_type == "invoice.payment_failed" else "unknown")
+    default_status = (
+        "active"
+        if event_type == "checkout.session.completed"
+        else ("past_due" if event_type == "invoice.payment_failed" else "unknown")
+    )
     status_value = str(subscription_data.get("status") or default_status)
     plan = "pro" if status_value in {"active", "trialing"} else "free"
     customer_id = subscription_data.get("customer") or obj.get("customer")
@@ -112,7 +160,9 @@ def _apply_subscription_event(db: Session, event_type: str, obj: dict) -> None:
     else:
         existing.plan = plan
         existing.status = status_value
-        existing.external_customer_id = str(customer_id) if customer_id else existing.external_customer_id
+        existing.external_customer_id = (
+            str(customer_id) if customer_id else existing.external_customer_id
+        )
         existing.current_period_end = period_end or existing.current_period_end
     user.plan = plan
 
@@ -128,18 +178,30 @@ async def stripe_webhook(
         raise HTTPException(status_code=400, detail="Invalid webhook.")
     payload = await request.body()
     try:
-        event = stripe.Webhook.construct_event(payload, stripe_signature, settings.stripe_webhook_secret)
+        event = stripe.Webhook.construct_event(
+            payload, stripe_signature, settings.stripe_webhook_secret
+        )
     except Exception as exc:
         metrics.increment("billing.webhook_signature_rejected")
-        raise HTTPException(status_code=400, detail="Invalid webhook signature.") from exc
+        raise HTTPException(
+            status_code=400, detail="Invalid webhook signature."
+        ) from exc
     event_id = str(event.get("id", ""))
     event_type = str(event.get("type", ""))
     if not event_id:
         raise HTTPException(status_code=400, detail="Invalid webhook event.")
-    if db.scalar(select(PaymentEvent).where(PaymentEvent.provider_event_id == event_id)):
+    if db.scalar(
+        select(PaymentEvent).where(PaymentEvent.provider_event_id == event_id)
+    ):
         return {"received": True}
     obj = event.get("data", {}).get("object", {})
-    if event_type in {"checkout.session.completed", "customer.subscription.created", "customer.subscription.updated", "customer.subscription.deleted", "invoice.payment_failed"}:
+    if event_type in {
+        "checkout.session.completed",
+        "customer.subscription.created",
+        "customer.subscription.updated",
+        "customer.subscription.deleted",
+        "invoice.payment_failed",
+    }:
         _apply_subscription_event(db, event_type, obj)
     db.add(PaymentEvent(provider_event_id=event_id, event_type=event_type))
     try:
@@ -148,7 +210,9 @@ async def stripe_webhook(
         db.rollback()
         # Unique provider_event_id makes concurrent retries safe; provider will retry if
         # the transaction genuinely failed.
-        if db.scalar(select(PaymentEvent).where(PaymentEvent.provider_event_id == event_id)):
+        if db.scalar(
+            select(PaymentEvent).where(PaymentEvent.provider_event_id == event_id)
+        ):
             return {"received": True}
         raise
     metrics.increment("billing.webhook_processed")

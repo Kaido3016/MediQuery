@@ -40,7 +40,11 @@ def signup(payload: SignUpRequest, db: Session = Depends(get_db)) -> AuthRespons
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     settings = get_settings()
-    user = User(email=email, password_hash=password_hash, email_verified=settings.environment.lower() != "production")
+    user = User(
+        email=email,
+        password_hash=password_hash,
+        email_verified=settings.environment.lower() != "production",
+    )
     db.add(user)
     db.flush()
     db.add(AuditEvent(actor_id=user.id, action="account_created", metadata_json={}))
@@ -54,6 +58,7 @@ def signup(payload: SignUpRequest, db: Session = Depends(get_db)) -> AuthRespons
     db.commit()
     if get_settings().environment.lower() == "production":
         from src.api.routes.account_security import send_verification_for_user
+
         send_verification_for_user(user, db)
     metrics.increment("accounts.signup")
     if settings.environment.lower() == "production":
@@ -72,14 +77,26 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)) -> AuthResponse:
         )
     settings = get_settings()
     if settings.environment.lower() == "production" and not user.email_verified:
-        raise HTTPException(status_code=403, detail="Verify your email before signing in.")
+        raise HTTPException(
+            status_code=403, detail="Verify your email before signing in."
+        )
     if user.mfa_enabled and (
         not user.mfa_secret
         or not payload.totp_code
-        or not pyotp.TOTP(decrypt_mfa_secret(user.mfa_secret)).verify(payload.totp_code, valid_window=1)
+        or not pyotp.TOTP(decrypt_mfa_secret(user.mfa_secret)).verify(
+            payload.totp_code, valid_window=1
+        )
     ):
-        raise HTTPException(status_code=401, detail="Invalid email, password, or authenticator code")
-    db.add(AuditEvent(actor_id=user.id, action="login_succeeded", metadata_json={"mfa": user.mfa_enabled}))
+        raise HTTPException(
+            status_code=401, detail="Invalid email, password, or authenticator code"
+        )
+    db.add(
+        AuditEvent(
+            actor_id=user.id,
+            action="login_succeeded",
+            metadata_json={"mfa": user.mfa_enabled},
+        )
+    )
     db.commit()
     metrics.increment("accounts.login")
     return AuthResponse(access_token=create_access_token(user.id, user.token_version))
@@ -97,7 +114,9 @@ def delete_account(
         for report in reports:
             db.add(StorageDeletion(storage_key=report.storage_key))
     else:
-        staged = stage_files([settings.upload_root / report.storage_key for report in reports])
+        staged = stage_files(
+            [settings.upload_root / report.storage_key for report in reports]
+        )
     db.add(
         AuditEvent(
             actor_id=user.id, action="account_deletion_requested", metadata_json={}

@@ -20,7 +20,9 @@ def _account(client):
             "acknowledge_medical_limitations": True,
         },
     )
-    token = client.post("/api/auth/login", json={"email": email, "password": password}).json()["access_token"]
+    token = client.post(
+        "/api/auth/login", json={"email": email, "password": password}
+    ).json()["access_token"]
     return email, {"Authorization": f"Bearer {token}"}
 
 
@@ -36,14 +38,28 @@ def test_checkout_never_claims_payment_when_stripe_is_not_configured():
 def test_stripe_webhook_requires_a_valid_signature(monkeypatch):
     from src.api.routes import billing
 
-    monkeypatch.setattr(billing, "get_settings", lambda: SimpleNamespace(stripe_webhook_secret="whsec_test"))
-    monkeypatch.setattr(stripe.Webhook, "construct_event", lambda *args, **kwargs: (_ for _ in ()).throw(ValueError("bad signature")))
+    monkeypatch.setattr(
+        billing,
+        "get_settings",
+        lambda: SimpleNamespace(stripe_webhook_secret="whsec_test"),
+    )
+    monkeypatch.setattr(
+        stripe.Webhook,
+        "construct_event",
+        lambda *args, **kwargs: (_ for _ in ()).throw(ValueError("bad signature")),
+    )
     with TestClient(app) as client:
-        response = client.post("/api/billing/webhook", content=b"{}", headers={"Stripe-Signature": "invalid"})
+        response = client.post(
+            "/api/billing/webhook",
+            content=b"{}",
+            headers={"Stripe-Signature": "invalid"},
+        )
         assert response.status_code == 400
 
 
-def test_subscription_webhook_is_verified_idempotently_and_updates_entitlements(monkeypatch):
+def test_subscription_webhook_is_verified_idempotently_and_updates_entitlements(
+    monkeypatch,
+):
     from src.api.routes import billing
 
     event_id = f"evt_{uuid4().hex}"
@@ -60,14 +76,32 @@ def test_subscription_webhook_is_verified_idempotently_and_updates_entitlements(
             }
         },
     }
-    monkeypatch.setattr(billing, "get_settings", lambda: SimpleNamespace(stripe_webhook_secret="whsec_test"))
-    monkeypatch.setattr(stripe.Webhook, "construct_event", lambda *args, **kwargs: event)
+    monkeypatch.setattr(
+        billing,
+        "get_settings",
+        lambda: SimpleNamespace(stripe_webhook_secret="whsec_test"),
+    )
+    monkeypatch.setattr(
+        stripe.Webhook, "construct_event", lambda *args, **kwargs: event
+    )
     with TestClient(app) as client:
         _, headers = _account(client)
-        user_id = int(__import__("src.core.security", fromlist=["decode_access_token"]).decode_access_token(headers["Authorization"].split()[1]))
+        user_id = int(
+            __import__(
+                "src.core.security", fromlist=["decode_access_token"]
+            ).decode_access_token(headers["Authorization"].split()[1])
+        )
         event["data"]["object"]["metadata"]["user_id"] = str(user_id)
-        first = client.post("/api/billing/webhook", content=b"signed-payload", headers={"Stripe-Signature": "valid"})
-        second = client.post("/api/billing/webhook", content=b"signed-payload", headers={"Stripe-Signature": "valid"})
+        first = client.post(
+            "/api/billing/webhook",
+            content=b"signed-payload",
+            headers={"Stripe-Signature": "valid"},
+        )
+        second = client.post(
+            "/api/billing/webhook",
+            content=b"signed-payload",
+            headers={"Stripe-Signature": "valid"},
+        )
         assert first.status_code == second.status_code == 200
         summary = client.get("/api/billing/summary", headers=headers)
         assert summary.status_code == 200
