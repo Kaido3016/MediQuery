@@ -48,6 +48,7 @@ class Settings(BaseSettings):
     stripe_price_id: str | None = None
     stripe_success_url: str | None = None
     stripe_cancel_url: str | None = None
+    stripe_portal_return_url: str | None = None
     mfa_issuer: str = "MediQuery"
 
     @field_validator("cors_origins", mode="before")
@@ -75,7 +76,7 @@ class Settings(BaseSettings):
                 raise RuntimeError("Production CORS origins must use HTTPS")
             if not self.frontend_base_url.startswith("https://"):
                 raise RuntimeError("Production FRONTEND_BASE_URL must use HTTPS")
-            if not all(url and url.startswith("https://") for url in (self.stripe_success_url, self.stripe_cancel_url)):
+            if not all(url and url.startswith("https://") for url in (self.stripe_success_url, self.stripe_cancel_url, self.stripe_portal_return_url)):
                 raise RuntimeError("Production Stripe redirect URLs must use HTTPS")
             if self.metrics_token is not None and len(self.metrics_token) < 32:
                 raise RuntimeError(
