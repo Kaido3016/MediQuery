@@ -17,7 +17,10 @@ MediQuery is a production-shaped software platform for securely organizing text-
 - Report history, detail, deletion, and account deletion with database/file cleanup.
 - Deterministic PubMed keyword search; semantic/RAG search is not represented as an implemented production capability.
 - Streamlit client for the verified user-facing workflow.
-- Automated unit/API/security/extraction/E2E tests and GitHub Actions quality gates.
+- Versioned Alembic schema migrations, with production startup refusing an absent or stale migration revision.
+- Redis-backed shared sliding-window rate limiting in production with stricter budgets for authentication, reports, and search; production fails closed if Redis is unavailable.
+- Rollback-safe report/account deletion file staging and automated lifecycle tests.
+- Automated unit/API/security/extraction/E2E tests, read-only GitHub Actions quality gates, CodeQL analysis, and Dependabot update automation.
 - Docker production-shaped API image and Compose configuration validation.
 
 ## Verified primary journey
@@ -97,6 +100,7 @@ python -m black --check src tests app.py
 python -m flake8 src tests app.py --max-line-length=120
 python -m pytest -q
 python -m compileall -q src app.py
+DATABASE_URL=sqlite:///./migration-ci.db alembic upgrade head
 ```
 
 GitHub Actions runs the Python quality gate plus a real Docker image build and Docker Compose configuration validation on Ubuntu.
@@ -128,7 +132,7 @@ The client defaults to `http://localhost:8000`. Set `MEDIQUERY_API_URL` for anot
 
 ### Docker API
 
-Create an untracked `.env` containing a managed PostgreSQL `DATABASE_URL`, a unique `JWT_SECRET`, and HTTPS `CORS_ORIGINS`, then:
+Create an untracked `.env` containing a managed PostgreSQL `DATABASE_URL`, a unique `JWT_SECRET`, HTTPS `CORS_ORIGINS`, and a private `RATE_LIMIT_REDIS_URL`, then:
 
 ```bash
 docker compose up --build
@@ -148,7 +152,7 @@ A real sensitive-data deployment requires additional operational controls that a
 6. Malware scanning and resource limits.
 7. Backups and tested restoration.
 8. PHI-conscious monitoring and incident response.
-9. Migration/rollback procedures.
+9. Versioned Alembic migration/rollback procedures.
 10. Legal, privacy, security, provider, and clinical review appropriate to the target market.
 
 MediQuery does **not** claim HIPAA, PIPEDA, PHIPA, GDPR, SOC 2, regulatory clearance, clinical validation, or production medical-data authorization merely because engineering controls exist in this repository.
