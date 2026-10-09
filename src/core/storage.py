@@ -1,7 +1,6 @@
 """Private report storage with local development and encrypted S3 production backends."""
 
 from pathlib import Path
-from urllib.parse import urlparse
 
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
