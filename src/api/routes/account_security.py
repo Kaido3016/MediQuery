@@ -103,6 +103,11 @@ def confirm_password_reset(payload: PasswordResetConfirm, db: Session = Depends(
     return {"message": "Password changed. Please sign in again."}
 
 
+@router.get("/mfa/status")
+def mfa_status(user: User = Depends(current_user)) -> dict[str, bool]:
+    return {"enabled": user.mfa_enabled}
+
+
 @router.post("/mfa/setup")
 def setup_mfa(user: User = Depends(current_user), db: Session = Depends(get_db)) -> dict[str, str]:
     if user.mfa_enabled:
