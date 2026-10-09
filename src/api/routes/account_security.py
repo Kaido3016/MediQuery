@@ -1,6 +1,5 @@
 """Verified email, password recovery, TOTP MFA, and session revocation endpoints."""
 
-from datetime import datetime
 import logging
 from urllib.parse import quote
 
@@ -29,7 +28,7 @@ def send_verification_for_user(user: User, db: Session) -> None:
     settings = get_settings()
     link = f"{settings.frontend_base_url.rstrip('/')}/?verify_email_token={quote(raw)}"
     try:
-        send_account_email(user.email, "Verify your MediQuery email", f"Open MediQuery and confirm your email:\\n\\n{link}\\n\\nThis link expires in {settings.email_token_minutes} minutes.")
+        send_account_email(user.email, "Verify your MediQuery email", f"Open MediQuery and confirm your email:\n\n{link}\n\nThis link expires in {settings.email_token_minutes} minutes.")
     except Exception as exc:
         logger.warning("account_email_delivery_failed purpose=verify_email")
         raise HTTPException(status_code=503, detail="Email delivery is temporarily unavailable.") from exc
