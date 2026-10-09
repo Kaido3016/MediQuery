@@ -12,7 +12,7 @@ from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from src.api.routes import auth, billing, reports, search
+from src.api.routes import account_security, auth, billing, reports, search
 from src.core.database import create_database
 from src.core.observability import elapsed_ms, metrics
 from src.core.rate_limit import RateLimitBackendUnavailable, rate_limiter
@@ -50,6 +50,7 @@ app.add_middleware(
 
 app.include_router(search.router, prefix="/api/search", tags=["search"])
 app.include_router(auth.router, prefix="/api/auth", tags=["authentication"])
+app.include_router(account_security.router, prefix="/api/auth", tags=["account security"])
 app.include_router(reports.router, prefix="/api/reports", tags=["reports"])
 app.include_router(billing.router, prefix="/api/billing", tags=["billing"])
 
