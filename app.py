@@ -57,14 +57,53 @@ def request_auth(mode: str, email: str, password: str, acknowledged: bool) -> No
             },
         )
         if response.ok:
-            st.session_state.access_token = response.json()["access_token"]
-            st.rerun()
+            result = response.json()
+            token = result.get("access_token")
+            if token:
+                st.session_state.access_token = token
+                st.rerun()
+            if result.get("verification_required"):
+                st.success("Account created. Check your email to verify the address before signing in.")
+                return
         st.error(response.json().get("detail", "We could not complete that request."))
     except (requests.RequestException, ValueError):
         st.error("MediQuery is unavailable. Please try again shortly.")
 
 
 def signed_out_view() -> None:
+    query_params = st.experimental_get_query_params()
+    verify_token = (query_params.get("verify_email_token") or [None])[0]
+    reset_token = (query_params.get("password_reset_token") or [None])[0]
+    if verify_token:
+        st.info("Confirm your email address to finish account setup.")
+        if st.button("Verify email address", type="primary"):
+            try:
+                response = api("POST", "/api/auth/verify-email", json={"token": verify_token})
+                if response.ok:
+                    st.success("Email verified. You can now log in.")
+                    st.experimental_set_query_params()
+                else:
+                    st.error(response.json().get("detail", "Verification link is invalid or expired."))
+            except requests.RequestException:
+                st.error("MediQuery is unavailable. Please try again shortly.")
+    if reset_token:
+        with st.form("password_reset_form"):
+            new_password = st.text_input("New password", type="password", help="Use at least 12 characters.")
+            confirm_password = st.text_input("Confirm new password", type="password")
+            submitted = st.form_submit_button("Reset password")
+        if submitted:
+            if new_password != confirm_password:
+                st.error("The passwords do not match.")
+            else:
+                try:
+                    response = api("POST", "/api/auth/password-reset/confirm", json={"token": reset_token, "new_password": new_password})
+                    if response.ok:
+                        st.success("Password changed. Log in with your new password.")
+                        st.experimental_set_query_params()
+                    else:
+                        st.error(response.json().get("detail", "Reset link is invalid or expired."))
+                except requests.RequestException:
+                    st.error("MediQuery is unavailable. Please try again shortly.")
     st.title("Understand the facts in your lab report")
     st.subheader(
         "A private, evidence-first way to organize extracted report values before "
@@ -100,10 +139,30 @@ def signed_out_view() -> None:
                 password,
                 acknowledged or mode == "Log in",
             )
-        st.caption(
-            "Password reset and email verification are planned before public launch."
-        )
         st.markdown("</div>", unsafe_allow_html=True)
+    with st.expander("Forgot your password or need another verification email?"):
+        recovery_email = st.text_input("Account email", key="recovery_email")
+        recovery_left, recovery_right = st.columns(2)
+        with recovery_left:
+            if st.button("Send password-reset email"):
+                try:
+                    response = api("POST", "/api/auth/password-reset/request", json={"email": recovery_email})
+                    if response.ok:
+                        st.success(response.json().get("message", "If the account exists, an email will be sent."))
+                    else:
+                        st.error("Could not request a password reset.")
+                except requests.RequestException:
+                    st.error("MediQuery is unavailable. Please try again shortly.")
+        with recovery_right:
+            if st.button("Resend verification email"):
+                try:
+                    response = api("POST", "/api/auth/verification/resend", json={"email": recovery_email})
+                    if response.ok:
+                        st.success(response.json().get("message", "If verification is needed, an email will be sent."))
+                    else:
+                        st.error("Could not request verification.")
+                except requests.RequestException:
+                    st.error("MediQuery is unavailable. Please try again shortly.")
     st.divider()
     first, second, third = st.columns(3)
     with first:
