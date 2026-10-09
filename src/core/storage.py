@@ -1,7 +1,5 @@
 """Private report storage with local development and encrypted S3 production backends."""
 
-from pathlib import Path
-
 import boto3
 from botocore.config import Config
 from botocore.exceptions import BotoCoreError, ClientError
