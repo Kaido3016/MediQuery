@@ -15,7 +15,7 @@ depends_on = None
 def upgrade() -> None:
     op.add_column("users", sa.Column("email_verified", sa.Boolean(), nullable=False, server_default=sa.false()))
     op.add_column("users", sa.Column("mfa_enabled", sa.Boolean(), nullable=False, server_default=sa.false()))
-    op.add_column("users", sa.Column("mfa_secret", sa.String(length=64), nullable=True))
+    op.add_column("users", sa.Column("mfa_secret", sa.String(length=2048), nullable=True))
     op.add_column("users", sa.Column("token_version", sa.Integer(), nullable=False, server_default="0"))
     op.create_table(
         "account_tokens",
