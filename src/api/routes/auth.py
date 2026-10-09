@@ -16,6 +16,7 @@ from src.core.observability import metrics
 from src.core.security import create_access_token, hash_password, verify_password
 from src.core.settings import get_settings
 import pyotp
+from src.core.mfa_crypto import decrypt_mfa_secret
 
 router = APIRouter()
 
@@ -75,7 +76,7 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)) -> AuthResponse:
     if user.mfa_enabled and (
         not user.mfa_secret
         or not payload.totp_code
-        or not pyotp.TOTP(user.mfa_secret).verify(payload.totp_code, valid_window=1)
+        or not pyotp.TOTP(decrypt_mfa_secret(user.mfa_secret)).verify(payload.totp_code, valid_window=1)
     ):
         raise HTTPException(status_code=401, detail="Invalid email, password, or authenticator code")
     db.add(AuditEvent(actor_id=user.id, action="login_succeeded", metadata_json={"mfa": user.mfa_enabled}))
