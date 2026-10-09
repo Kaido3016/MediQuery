@@ -45,7 +45,11 @@ class FixedWindowRateLimiter:
         self._calls = 0
         self._redis_clients: dict[str, Redis] = {}
 
-    async def allowed(
+    def allowed(self, key: str, limit: int, window_seconds: int) -> bool:
+        """Synchronous, bounded local limiter retained for tests/development callers."""
+        return self._local_allowed(key, limit, window_seconds)
+
+    async def allowed_async(
         self,
         key: str,
         limit: int,
@@ -89,7 +93,7 @@ class FixedWindowRateLimiter:
             raise RateLimitBackendUnavailable(
                 "A shared Redis rate-limit URL is required in production"
             )
-        return self._local_allowed(key, limit, window_seconds)
+        return self.allowed(key, limit, window_seconds)
 
     def reset_local_state(self) -> None:
         """Clear in-process counters; intended for isolated tests and development resets."""
