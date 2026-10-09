@@ -1,0 +1,38 @@
+name: one-time-terraform-formatting-helper
+
+on:
+  push:
+    branches:
+      - fix/security-data-lifecycle-quality-gates
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temporary-terraform-formatting-helper
+  cancel-in-progress: true
+
+jobs:
+  format-terraform-on-task-branch:
+    if: github.ref == 'refs/heads/fix/security-data-lifecycle-quality-gates'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+      - name: Format Terraform sources
+        run: terraform fmt -recursive infra/aws
+      - name: Commit formatting only on the task branch
+        run: |
+          if git diff --quiet; then
+            echo "Terraform formatting is already clean."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add infra/aws
+          git commit -m "style: format Terraform infrastructure"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
