@@ -45,6 +45,10 @@ class User(Base):
     password_hash: Mapped[str] = mapped_column(String(512))
     plan: Mapped[str] = mapped_column(String(20), default="free")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    email_verified: Mapped[bool] = mapped_column(default=False, nullable=False)
+    mfa_enabled: Mapped[bool] = mapped_column(default=False, nullable=False)
+    mfa_secret: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    token_version: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     reports: Mapped[list["Report"]] = relationship(
         back_populates="owner", cascade="all, delete-orphan"
     )
@@ -54,6 +58,29 @@ class User(Base):
     usage_events: Mapped[list["UsageEvent"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
+
+
+class AccountToken(Base):
+    """Single-use, hashed email verification and password-reset tokens."""
+
+    __tablename__ = "account_tokens"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    purpose: Mapped[str] = mapped_column(String(32), index=True)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime, index=True)
+    consumed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class PaymentEvent(Base):
+    """Idempotency ledger for verified provider webhook event IDs."""
+
+    __tablename__ = "payment_events"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    provider_event_id: Mapped[str] = mapped_column(String(255), unique=True, index=True)
+    event_type: Mapped[str] = mapped_column(String(128), nullable=False)
+    processed_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
 class Report(Base):
