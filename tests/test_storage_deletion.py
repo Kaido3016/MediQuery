@@ -14,7 +14,9 @@ class FakeS3:
 
     def head_object(self, **kwargs):
         if self.missing:
-            raise ClientError({"Error": {"Code": "404", "Message": "Not Found"}}, "HeadObject")
+            raise ClientError(
+                {"Error": {"Code": "404", "Message": "Not Found"}}, "HeadObject"
+            )
         return {}
 
     def delete_object(self, **kwargs):
@@ -26,7 +28,9 @@ def test_delete_report_does_not_create_duplicate_s3_delete_markers(monkeypatch):
     monkeypatch.setattr(
         storage,
         "get_settings",
-        lambda: SimpleNamespace(storage_backend="s3", object_storage_bucket="private-reports"),
+        lambda: SimpleNamespace(
+            storage_backend="s3", object_storage_bucket="private-reports"
+        ),
     )
     monkeypatch.setattr(storage, "_s3_client", lambda: fake)
     storage.delete_report("synthetic-user/synthetic-report.pdf")
@@ -38,7 +42,9 @@ def test_delete_report_removes_existing_s3_object(monkeypatch):
     monkeypatch.setattr(
         storage,
         "get_settings",
-        lambda: SimpleNamespace(storage_backend="s3", object_storage_bucket="private-reports"),
+        lambda: SimpleNamespace(
+            storage_backend="s3", object_storage_bucket="private-reports"
+        ),
     )
     monkeypatch.setattr(storage, "_s3_client", lambda: fake)
     storage.delete_report("synthetic-user/synthetic-report.pdf")
