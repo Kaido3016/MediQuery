@@ -1,4 +1,4 @@
-# Local production-shaped smoke environment. Supply secrets via an untracked .env file.
+# Production-shaped API. Private cloud dependencies must not be exposed publicly.
 services:
   api:
     build: .
@@ -9,12 +9,33 @@ services:
       JWT_SECRET: ${JWT_SECRET:?Set a unique JWT_SECRET in .env}
       CORS_ORIGINS: ${CORS_ORIGINS:?Set HTTPS frontend origin(s) in .env}
       RATE_LIMIT_REDIS_URL: ${RATE_LIMIT_REDIS_URL:?Set a private Redis URL in .env}
-      FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS:-127.0.0.1}
+      STORAGE_BACKEND: s3
+      OBJECT_STORAGE_BUCKET: ${OBJECT_STORAGE_BUCKET:?Set the private report bucket}
+      OBJECT_STORAGE_REGION: ${OBJECT_STORAGE_REGION:-ca-central-1}
+      OBJECT_STORAGE_KMS_KEY_ID: ${OBJECT_STORAGE_KMS_KEY_ID:?Set the report KMS key ARN}
+      CLAMAV_HOST: clamav
+      CLAMAV_PORT: 3310
+      SMTP_HOST: ${SMTP_HOST:?Set a transactional SMTP host}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:?Set a verified sender email}
+      FRONTEND_BASE_URL: ${FRONTEND_BASE_URL:?Set the HTTPS frontend URL}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:?Set the Stripe secret key}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:?Set the Stripe webhook signing secret}
+      STRIPE_PRICE_ID: ${STRIPE_PRICE_ID:?Set the Stripe recurring price ID}
+      STRIPE_SUCCESS_URL: ${STRIPE_SUCCESS_URL:?Set the HTTPS checkout success URL}
+      STRIPE_CANCEL_URL: ${STRIPE_CANCEL_URL:?Set the HTTPS checkout cancel URL}
+      METRICS_TOKEN: ${METRICS_TOKEN:?Set a metrics bearer secret}
+      FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS:?Set only trusted proxy IPs}
       UPLOAD_ROOT: /data/uploads
     ports:
       - "127.0.0.1:8000:8000"
     volumes:
       - mediquery_uploads:/data/uploads
+    depends_on:
+      clamav:
+        condition: service_healthy
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
@@ -22,5 +43,22 @@ services:
     tmpfs:
       - /tmp
 
+  clamav:
+    image: clamav/clamav:1.4
+    restart: unless-stopped
+    expose:
+      - "3310"
+    volumes:
+      - clamav_database:/var/lib/clamav
+    healthcheck:
+      test: ["CMD-SHELL", "clamdscan --ping 3"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 180s
+    security_opt:
+      - no-new-privileges:true
+
 volumes:
   mediquery_uploads:
+  clamav_database:
