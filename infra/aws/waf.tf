@@ -3,12 +3,16 @@ resource "aws_wafv2_web_acl" "mediquery" {
   description = "Managed baseline protection for the MediQuery public API."
   scope       = "REGIONAL"
 
-  default_action { allow {} }
+  default_action {
+    allow {}
+  }
 
   rule {
     name     = "AWSManagedCommonRuleSet"
     priority = 10
-    override_action { none {} }
+    override_action {
+      none {}
+    }
     statement {
       managed_rule_group_statement {
         name        = "AWSManagedRulesCommonRuleSet"
@@ -42,7 +46,9 @@ resource "aws_wafv2_web_acl" "mediquery" {
   rule {
     name     = "IPRateLimit"
     priority = 30
-    action { block {} }
+    action {
+      block {}
+    }
     statement {
       rate_based_statement {
         limit              = 2000
