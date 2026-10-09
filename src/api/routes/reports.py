@@ -32,7 +32,11 @@ from src.core.malware_scan import (
     MalwareScannerUnavailable,
     scan_upload,
 )
-from src.core.storage import StorageUnavailable, delete_report as delete_stored_report, put_report
+from src.core.storage import (
+    StorageUnavailable,
+    delete_report as delete_stored_report,
+    put_report,
+)
 from src.core.settings import get_settings
 from src.services.report_analysis import (
     ReportValidationError,
