@@ -15,6 +15,7 @@ from src.core.account_tokens import consume_account_token, issue_account_token
 from src.core.database import AuditEvent, User, get_db
 from src.core.email_delivery import send_account_email
 from src.core.observability import metrics
+from src.core.mfa_crypto import decrypt_mfa_secret, encrypt_mfa_secret
 from src.core.security import hash_password, verify_password
 from src.core.settings import get_settings
 
@@ -108,7 +109,7 @@ def setup_mfa(user: User = Depends(current_user), db: Session = Depends(get_db))
     if user.mfa_enabled:
         raise HTTPException(status_code=409, detail="MFA is already enabled.")
     secret = pyotp.random_base32()
-    user.mfa_secret = secret
+    user.mfa_secret = encrypt_mfa_secret(secret)
     db.commit()
     uri = pyotp.TOTP(secret).provisioning_uri(name=user.email, issuer_name=get_settings().mfa_issuer)
     return {"secret": secret, "otpauth_uri": uri, "message": "Add this account to an authenticator app, then confirm with a current code."}
@@ -116,7 +117,7 @@ def setup_mfa(user: User = Depends(current_user), db: Session = Depends(get_db))
 
 @router.post("/mfa/enable")
 def enable_mfa(payload: TotpRequest, user: User = Depends(current_user), db: Session = Depends(get_db)) -> dict[str, str]:
-    if not user.mfa_secret or not pyotp.TOTP(user.mfa_secret).verify(payload.code, valid_window=1):
+    if not user.mfa_secret or not pyotp.TOTP(decrypt_mfa_secret(user.mfa_secret)).verify(payload.code, valid_window=1):
         raise HTTPException(status_code=400, detail="Authenticator code is invalid.")
     user.mfa_enabled = True
     user.token_version += 1
