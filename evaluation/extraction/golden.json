@@ -11,7 +11,7 @@
           "value": "4.1",
           "unit": "g/dL",
           "reference_range": null,
-          "flag": "high",
+          "flag": "unknown",
           "page": 1
         }
       ]
@@ -53,7 +53,7 @@
           "value": "5.2",
           "unit": "10^3/uL",
           "reference_range": null,
-          "flag": "normal",
+          "flag": "unknown",
           "page": 1
         }
       ]
@@ -95,7 +95,7 @@
           "value": "6.3",
           "unit": "U/L",
           "reference_range": null,
-          "flag": "normal",
+          "flag": "unknown",
           "page": 1
         }
       ]
@@ -137,7 +137,7 @@
           "value": "7.4",
           "unit": "mmol/L",
           "reference_range": null,
-          "flag": "low",
+          "flag": "unknown",
           "page": 1
         }
       ]
@@ -179,7 +179,7 @@
           "value": "8.5",
           "unit": "10*9/L",
           "reference_range": null,
-          "flag": "high",
+          "flag": "unknown",
           "page": 1
         }
       ]
@@ -221,7 +221,7 @@
           "value": "9.6",
           "unit": "mIU/L",
           "reference_range": null,
-          "flag": "normal",
+          "flag": "unknown",
           "page": 1
         }
       ]
@@ -263,7 +263,7 @@
           "value": "4.5",
           "unit": "mg/dL",
           "reference_range": null,
-          "flag": "normal",
+          "flag": "unknown",
           "page": 1
         }
       ]
@@ -305,7 +305,7 @@
           "value": "5.6",
           "unit": "%",
           "reference_range": null,
-          "flag": "low",
+          "flag": "unknown",
           "page": 1
         }
       ]
@@ -347,7 +347,7 @@
           "value": "6.7",
           "unit": "g/dL",
           "reference_range": null,
-          "flag": "high",
+          "flag": "unknown",
           "page": 1
         }
       ]
@@ -389,7 +389,7 @@
           "value": "7.8",
           "unit": "10^3/uL",
           "reference_range": null,
-          "flag": "normal",
+          "flag": "unknown",
           "page": 1
         }
       ]
@@ -431,7 +431,7 @@
           "value": "8.9",
           "unit": "U/L",
           "reference_range": null,
-          "flag": "normal",
+          "flag": "unknown",
           "page": 1
         }
       ]
@@ -473,7 +473,7 @@
           "value": "10.0",
           "unit": "mmol/L",
           "reference_range": null,
-          "flag": "low",
+          "flag": "unknown",
           "page": 1
         }
       ]
