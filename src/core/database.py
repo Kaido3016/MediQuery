@@ -155,9 +155,7 @@ def create_database() -> None:
         from alembic.script import ScriptDirectory
 
         with engine.connect() as connection:
-            result = connection.execute(
-                text("SELECT version_num FROM alembic_version")
-            )
+            result = connection.execute(text("SELECT version_num FROM alembic_version"))
             applied_revisions = set(result.scalars())
         expected_revisions = set(
             ScriptDirectory.from_config(Config("alembic.ini")).get_heads()
