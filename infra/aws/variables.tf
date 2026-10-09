@@ -44,3 +44,21 @@ variable "rds_instance_identifier" {
   description = "CloudWatch dimension name for the RDS instance."
   type        = string
 }
+
+variable "acm_certificate_arn" {
+  description = "ACM certificate ARN for the HTTPS listener on the existing ALB."
+  type        = string
+  default     = ""
+}
+
+variable "application_target_group_arn" {
+  description = "Target group ARN for the private API service."
+  type        = string
+  default     = ""
+}
+
+variable "api_log_group_name" {
+  description = "CloudWatch log group receiving the API service's stdout/stderr."
+  type        = string
+  default     = "/ecs/mediquery-api"
+}
