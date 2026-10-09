@@ -100,7 +100,6 @@ python -m black --check src tests app.py
 python -m flake8 src tests app.py --max-line-length=120
 python -m pytest -q
 python -m compileall -q src app.py
-DATABASE_URL=sqlite:///./migration-ci.db alembic upgrade head
 ```
 
 GitHub Actions runs the Python quality gate plus a real Docker image build and Docker Compose configuration validation on Ubuntu.
