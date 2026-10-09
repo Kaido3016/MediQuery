@@ -14,9 +14,13 @@ from fastapi.responses import JSONResponse
 
 from src.api.routes import account_security, auth, billing, reports, search
 from sqlalchemy import text
-\nfrom src.core.database import create_database, engine
+
+from src.core.database import create_database, engine
 from src.core.observability import elapsed_ms, metrics
 from src.core.rate_limit import RateLimitBackendUnavailable, rate_limiter
+from src.core.storage import check_storage
+from src.core.malware_scan import check_scanner
+from redis.asyncio import Redis
 from src.core.settings import get_settings
 
 logger = logging.getLogger("mediquery.api")
