@@ -32,6 +32,16 @@ def upgrade() -> None:
     op.create_index("ix_account_tokens_token_hash", "account_tokens", ["token_hash"], unique=True)
     op.create_index("ix_account_tokens_expires_at", "account_tokens", ["expires_at"])
     op.create_table(
+        "storage_deletions",
+        sa.Column("id", sa.Integer(), primary_key=True),
+        sa.Column("storage_key", sa.String(length=512), nullable=False),
+        sa.Column("requested_at", sa.DateTime(), nullable=False),
+        sa.Column("processed_at", sa.DateTime(), nullable=True),
+        sa.Column("attempts", sa.Integer(), nullable=False, server_default="0"),
+        sa.Column("last_error", sa.String(length=64), nullable=True),
+    )
+    op.create_index("ix_storage_deletions_processed_at", "storage_deletions", ["processed_at"])
+    op.create_table(
         "payment_events",
         sa.Column("id", sa.Integer(), primary_key=True),
         sa.Column("provider_event_id", sa.String(length=255), nullable=False),
@@ -42,6 +52,8 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    op.drop_index("ix_storage_deletions_processed_at", table_name="storage_deletions")
+    op.drop_table("storage_deletions")
     op.drop_index("ix_payment_events_provider_event_id", table_name="payment_events")
     op.drop_table("payment_events")
     op.drop_index("ix_account_tokens_expires_at", table_name="account_tokens")
