@@ -156,9 +156,12 @@ def create_database() -> None:
 
         with engine.connect() as connection:
             applied_revisions = set(
-                connection.execute(text("SELECT version_num FROM alembic_version")).scalars()
+                connection.execute(text("SELECT version_num FROM alembic_version"))
+                .scalars()
             )
-        expected_revisions = set(ScriptDirectory.from_config(Config("alembic.ini")).get_heads())
+        expected_revisions = set(
+            ScriptDirectory.from_config(Config("alembic.ini")).get_heads()
+        )
         if applied_revisions != expected_revisions:
             raise RuntimeError(
                 "Production database schema is not at the current Alembic migration head"
