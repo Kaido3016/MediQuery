@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import boto3
+from botocore.config import Config
 from botocore.exceptions import BotoCoreError, ClientError
 
 from src.core.settings import get_settings
@@ -73,6 +74,7 @@ def _s3_client():
         "s3",
         region_name=settings.object_storage_region,
         endpoint_url=settings.object_storage_endpoint_url,
+        config=Config(connect_timeout=3, read_timeout=10, retries={"max_attempts": 2}),
     )
 
 
