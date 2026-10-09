@@ -11,6 +11,8 @@ from sqlalchemy import (
     String,
     Text,
     create_engine,
+    inspect,
+    text,
 )
 from sqlalchemy.orm import (
     DeclarativeBase,
@@ -143,6 +145,25 @@ class AuditEvent(Base):
 
 
 def create_database() -> None:
+    """Create development tables or require a fully migrated production database."""
+    if settings.environment.lower() == "production":
+        if not inspect(engine).has_table("alembic_version"):
+            raise RuntimeError(
+                "Production database has no Alembic revision; run 'alembic upgrade head' before startup"
+            )
+        from alembic.config import Config
+        from alembic.script import ScriptDirectory
+
+        with engine.connect() as connection:
+            applied_revisions = set(
+                connection.execute(text("SELECT version_num FROM alembic_version")).scalars()
+            )
+        expected_revisions = set(ScriptDirectory.from_config(Config("alembic.ini")).get_heads())
+        if applied_revisions != expected_revisions:
+            raise RuntimeError(
+                "Production database schema is not at the current Alembic migration head"
+            )
+        return
     Base.metadata.create_all(bind=engine)
 
 
