@@ -89,6 +89,7 @@ async def upload_report(
         metrics.increment("reports.malware_rejected")
         raise HTTPException(status_code=422, detail="The uploaded file failed security scanning.") from exc
     except MalwareScannerUnavailable as exc:
+        logger.error("reports.scanner_unavailable")
         metrics.increment("reports.scanner_unavailable")
         raise HTTPException(status_code=503, detail="Document scanning is temporarily unavailable.") from exc
     finally:
