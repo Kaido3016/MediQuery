@@ -77,11 +77,17 @@ def test_password_reset_is_single_use_and_revokes_old_tokens(monkeypatch):
 
 def test_email_verification_token_is_single_use(monkeypatch):
     from src.api.routes import account_security
+    from src.core.database import SessionLocal, User
+    from sqlalchemy import select
 
     sent = []
     monkeypatch.setattr(account_security, "send_account_email", lambda recipient, subject, body: sent.append(body))
     with TestClient(app) as client:
         email, _ = _signup(client)
+        with SessionLocal() as db:
+            user = db.scalar(select(User).where(User.email == email))
+            user.email_verified = False
+            db.commit()
         response = client.post("/api/auth/verification/resend", json={"email": email})
         assert response.status_code == 202
         match = re.search(r"verify_email_token=([A-Za-z0-9_-]+)", sent[-1])
