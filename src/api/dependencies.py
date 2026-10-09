@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from src.core.database import User, get_db
 from src.core.security import access_token_version, decode_access_token
+from src.core.settings import get_settings
 
 bearer = HTTPBearer(auto_error=False)
 
@@ -23,4 +24,6 @@ def current_user(
             detail="Authentication required",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    if get_settings().environment.lower() == "production" and not user.email_verified:
+        raise HTTPException(status_code=403, detail="Email verification required")
     return user
