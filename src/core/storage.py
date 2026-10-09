@@ -38,8 +38,16 @@ def put_report(storage_key: str, raw: bytes) -> None:
 def delete_report(storage_key: str) -> None:
     settings = get_settings()
     if settings.storage_backend == "s3":
+        client = _s3_client()
         try:
-            _s3_client().delete_object(
+            client.head_object(Bucket=settings.object_storage_bucket, Key=storage_key)
+        except ClientError as exc:
+            error_code = exc.response.get("Error", {}).get("Code")
+            if error_code in {"404", "NoSuchKey", "NotFound"}:
+                return
+            raise StorageUnavailable("Private object storage lookup failed") from exc
+        try:
+            client.delete_object(
                 Bucket=settings.object_storage_bucket,
                 Key=storage_key,
             )
