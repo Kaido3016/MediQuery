@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from src.api.schemas import AuthResponse, LoginRequest, SignUpRequest
 from src.api.dependencies import current_user
 from src.core.database import AuditEvent, Report, User, get_db
+from src.core.file_lifecycle import purge_staged_files, restore_staged_files, stage_files
 from src.core.observability import metrics
 from src.core.settings import get_settings
 from src.core.security import create_access_token, hash_password, verify_password
@@ -70,15 +71,18 @@ def delete_account(
     """Delete the caller's reports and account. Backup purge remains an operational task."""
     upload_root = get_settings().upload_root
     reports = list(db.scalars(select(Report).where(Report.owner_id == user.id)))
-    for report in reports:
-        target = upload_root / report.storage_key
-        if target.exists():
-            target.unlink()
+    staged = stage_files([upload_root / report.storage_key for report in reports])
     db.add(
         AuditEvent(
             actor_id=user.id, action="account_deletion_requested", metadata_json={}
         )
     )
     db.delete(user)
-    db.commit()
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        restore_staged_files(staged)
+        raise
+    purge_staged_files(staged)
     metrics.increment("accounts.deleted")
