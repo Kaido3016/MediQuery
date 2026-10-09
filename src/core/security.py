@@ -66,20 +66,6 @@ def access_token_version(token: str) -> int | None:
         return None
 
 
-def access_token_version(token: str) -> int | None:
-    """Return the revocation version from a valid access token."""
-    settings = get_settings()
-    try:
-        payload = jwt.decode(
-            token, settings.jwt_secret, algorithms=[settings.jwt_algorithm]
-        )
-        if payload.get("type") != "access":
-            return None
-        return int(payload.get("ver", 0))
-    except (JWTError, ValueError, TypeError):
-        return None
-
-
 def decode_access_token(token: str) -> int | None:
     settings = get_settings()
     try:

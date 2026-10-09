@@ -32,7 +32,7 @@ from src.core.malware_scan import (
     MalwareScannerUnavailable,
     scan_upload,
 )
-from src.core.storage import StorageUnavailable, delete_report, put_report
+from src.core.storage import StorageUnavailable, delete_report as delete_stored_report, put_report
 from src.core.settings import get_settings
 from src.services.report_analysis import (
     ReportValidationError,
@@ -160,7 +160,7 @@ async def upload_report(
     except Exception:
         db.rollback()
         try:
-            await asyncio.to_thread(delete_report, storage_key)
+            await asyncio.to_thread(delete_stored_report, storage_key)
         except StorageUnavailable:
             db.add(
                 StorageDeletion(
