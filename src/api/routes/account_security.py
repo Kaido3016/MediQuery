@@ -63,7 +63,8 @@ def resend_verification(
             send_account_email(
                 user.email,
                 "Verify your MediQuery email",
-                f"Open MediQuery and confirm your email:\n\n{link}\n\nThis link expires in {settings.email_token_minutes} minutes.",
+                f"Open MediQuery and confirm your email:\n\n"
+                f"{link}\n\nThis link expires in {settings.email_token_minutes} minutes.",
             )
         except Exception:
             logger.warning("account_email_delivery_failed purpose=verify_email")
