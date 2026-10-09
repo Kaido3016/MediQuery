@@ -69,7 +69,8 @@ def _apply_subscription_event(db: Session, event_type: str, obj: dict) -> None:
     if not user:
         logger.warning("stripe_subscription_event_unmatched")
         return
-    status_value = str(subscription_data.get("status") or ("active" if event_type == "checkout.session.completed" else "unknown"))
+    default_status = "active" if event_type == "checkout.session.completed" else ("past_due" if event_type == "invoice.payment_failed" else "unknown")
+    status_value = str(subscription_data.get("status") or default_status)
     plan = "pro" if status_value in {"active", "trialing"} else "free"
     customer_id = subscription_data.get("customer") or obj.get("customer")
     period_end = _unix_datetime(subscription_data.get("current_period_end"))
