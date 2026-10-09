@@ -47,7 +47,7 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     email_verified: Mapped[bool] = mapped_column(default=False, nullable=False)
     mfa_enabled: Mapped[bool] = mapped_column(default=False, nullable=False)
-    mfa_secret: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    mfa_secret: Mapped[str | None] = mapped_column(String(2048), nullable=True)
     token_version: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     reports: Mapped[list["Report"]] = relationship(
         back_populates="owner", cascade="all, delete-orphan"
