@@ -36,6 +36,7 @@ spacy==3.7.2
 # Database / caching
 redis==5.0.1
 sqlalchemy==2.0.23
+alembic==1.13.1
 psycopg2-binary==2.9.7
 
 # Development / testing
