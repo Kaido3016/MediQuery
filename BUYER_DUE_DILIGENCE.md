@@ -22,7 +22,9 @@ The release is intentionally **not** represented as a clinically validated medic
 - Explicit extraction-attention notes when lab-shaped lines cannot be safely parsed.
 - Page numbers and source-derived evidence persisted with findings.
 - Report/account deletion lifecycle with database/file cleanup.
-- Security headers, CORS controls, rate-limit telemetry, safe errors, and production fail-closed configuration.
+- Security headers, CORS controls, Redis-backed shared sliding-window rate limits with endpoint-specific budgets, safe errors, and production fail-closed configuration.
+- Versioned Alembic schema migrations; production startup refuses to run against an absent or outdated migration revision.
+- Rollback-safe report/account deletion staging and upload-file cleanup when persistence fails.
 - Automated unit/API/security/E2E testing and CI quality gates.
 - Real Docker image build and Compose configuration validation in GitHub Actions.
 
@@ -44,13 +46,13 @@ CI checks formatting, linting, tests, compilation, credential-shaped secrets, Do
 
 ## Docker status
 
-The Dockerfile builds the FastAPI API as a non-root user with a read-only runtime filesystem and private upload volume support. Compose requires a managed PostgreSQL URL, unique JWT secret, and HTTPS CORS origins. Streamlit is deployed separately.
+The Dockerfile builds the FastAPI API as a non-root user with a read-only runtime filesystem and private upload volume support. Compose requires a managed PostgreSQL URL, unique JWT secret, HTTPS CORS origins, and a private Redis URL for shared rate limiting. Streamlit is deployed separately.
 
 The repository CI performs the Docker build and Compose configuration check on GitHub-hosted Linux. Buyer-specific staging/production deployment must still be tested in the buyer's infrastructure.
 
 ## Security / privacy limitations
 
-Repository controls do not by themselves establish a compliant production health-data environment. A buyer must independently review threat modeling, penetration testing, secrets, dependencies/SBOM, TLS/WAF, distributed rate limiting, malware scanning, backups, monitoring, incident response, data retention, residency, and deletion from backups.
+Repository controls do not by themselves establish a compliant production health-data environment. A buyer must independently review threat modeling, penetration testing, secrets, dependencies/SBOM, TLS/WAF, Redis availability and trusted-proxy configuration, malware scanning, backups/restore, monitoring, incident response, data retention, residency, and deletion from backups.
 
 ## Medical and regulatory limitations
 
