@@ -8,14 +8,14 @@
 - Report deletion and account deletion remove local report objects and database records in the local implementation.
 - Production configuration fails when a default/short JWT secret, SQLite, or HTTP CORS origin is used.
 - Explicit CORS allowlist, restrictive API methods/headers, baseline security headers, safe error messages, and non-PHI audit-event fields.
-- Per-process API rate limiting, request IDs, and aggregate counters that intentionally omit report text, filenames, emails, and tokens.
+- Redis-backed shared sliding-window rate limiting in production, tighter request budgets for authentication/report/search endpoints, request IDs, and aggregate counters that omit report text, filenames, emails, and tokens. Development fallback is memory-bounded and process-local.
 - A versioned acknowledgement that MediQuery is not medical advice is required at account creation and is recorded as non-PHI audit metadata.
 - `.env` and local report/database paths are ignored; Compose requires injected secrets and binds the API to loopback by default.
 
 ## Still required before processing real medical reports
 
-- A managed Postgres database, private encrypted object storage, migrations, backups, restore testing, and verified deletion from backups on the documented schedule.
-- TLS termination, WAF/rate limiting, malware scanning, asynchronous extraction with resource isolation, rate/usage enforcement across replicas, session revocation, email verification/password reset, MFA/admin controls, and immutable audit-log retention.
+- A managed Postgres database, private encrypted object storage, a versioned migration/release workflow, backups, restore testing, and verified deletion from backups on the documented schedule.
+- TLS termination, WAF, malware scanning, asynchronous extraction with resource isolation, rate/usage enforcement across replicas, session revocation, email verification/password reset, MFA/admin controls, and immutable audit-log retention. Redis-backed rate limits are implemented in code but still require an operated Redis service and deployment validation.
 - Secret manager, rotation, dependency/SBOM scanning, CI security gates, pen test, threat model, incident response, vendor DPA review, and security monitoring.
 - OCR implementation/evaluation for scanned PDFs; content-disarm/reconstruction policy as appropriate; a review of parser CVEs and sandboxing.
 - A privacy notice, consent flow, retention policy, data-subject request workflow, data residency decision, and legal/regulatory review.
