@@ -1,6 +1,7 @@
 """Authenticated, owner-scoped report lifecycle endpoints."""
 
 import asyncio
+import logging
 from pathlib import Path
 from time import perf_counter
 from uuid import uuid4
@@ -12,8 +13,30 @@ from sqlalchemy.orm import Session, selectinload
 from src.api.dependencies import current_user
 from src.api.schemas import PlanResponse, ReportResponse
 from src.core.billing import can_consume, current_usage, get_plan, record_usage
-from src.core.database import AuditEvent, Report, ReportFinding, User, get_db
+from src.core.database import (
+    AuditEvent,
+    Report,
+    ReportFinding,
+    StorageDeletion,
+    User,
+    get_db,
+)
+from src.core.file_lifecycle import (
+    purge_staged_files,
+    restore_staged_files,
+    stage_files,
+)
 from src.core.observability import elapsed_ms, metrics
+from src.core.malware_scan import (
+    MalwareDetected,
+    MalwareScannerUnavailable,
+    scan_upload,
+)
+from src.core.storage import (
+    StorageUnavailable,
+    delete_report as delete_stored_report,
+    put_report,
+)
 from src.core.settings import get_settings
 from src.services.report_analysis import (
     ReportValidationError,
@@ -22,6 +45,7 @@ from src.services.report_analysis import (
 )
 
 router = APIRouter()
+logger = logging.getLogger("mediquery.reports")
 
 
 def _get_owned_report(report_id: str, user: User, db: Session) -> Report:
@@ -44,6 +68,13 @@ def _store_report_bytes(target: Path, raw: bytes) -> None:
     target.write_bytes(raw)
 
 
+def _cleanup_upload_file(target: Path) -> None:
+    try:
+        target.unlink(missing_ok=True)
+    except OSError:
+        logger.error("report_upload_orphan_cleanup_failed")
+
+
 @router.post("", response_model=ReportResponse, status_code=status.HTTP_201_CREATED)
 async def upload_report(
     file: UploadFile = File(...),
@@ -62,19 +93,38 @@ async def upload_report(
     raw = await file.read(settings.max_report_bytes + 1)
     try:
         validate_pdf(file.filename, file.content_type, raw, settings.max_report_bytes)
+        await asyncio.to_thread(scan_upload, raw)
         extraction = await asyncio.to_thread(
             extract_report, raw, settings.max_pdf_pages
         )
     except ReportValidationError as exc:
         metrics.increment("reports.upload_failed")
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except MalwareDetected as exc:
+        metrics.increment("reports.malware_rejected")
+        raise HTTPException(
+            status_code=422, detail="The uploaded file failed security scanning."
+        ) from exc
+    except MalwareScannerUnavailable as exc:
+        logger.error("reports.scanner_unavailable")
+        metrics.increment("reports.scanner_unavailable")
+        raise HTTPException(
+            status_code=503, detail="Document scanning is temporarily unavailable."
+        ) from exc
     finally:
         await file.close()
 
     report_id = str(uuid4())
     storage_key = f"{user.id}/{report_id}.pdf"
-    target = settings.upload_root / storage_key
-    await asyncio.to_thread(_store_report_bytes, target, raw)
+    try:
+        await asyncio.to_thread(put_report, storage_key, raw)
+    except StorageUnavailable as exc:
+        metrics.increment("reports.storage_write_failed")
+        raise HTTPException(
+            status_code=503,
+            detail="Private document storage is temporarily unavailable.",
+        ) from exc
+
     report = Report(
         id=report_id,
         owner_id=user.id,
@@ -83,35 +133,47 @@ async def upload_report(
         page_count=extraction.page_count,
         extraction_note=extraction.note,
     )
-    db.add(report)
-    db.flush()
-    for finding in extraction.findings:
-        db.add(ReportFinding(report_id=report.id, **finding.__dict__))
-    db.add(
-        AuditEvent(
-            actor_id=user.id,
-            action="report_uploaded",
-            target_id=report.id,
-            metadata_json={
-                "pages": extraction.page_count,
-                "finding_count": len(extraction.findings),
-            },
+    try:
+        db.add(report)
+        db.flush()
+        for finding in extraction.findings:
+            db.add(ReportFinding(report_id=report.id, **finding.__dict__))
+        db.add(
+            AuditEvent(
+                actor_id=user.id,
+                action="report_uploaded",
+                target_id=report.id,
+                metadata_json={
+                    "pages": extraction.page_count,
+                    "finding_count": len(extraction.findings),
+                },
+            )
         )
-    )
-    if not record_usage(
-        db,
-        user,
-        "report",
-        idempotency_key=f"report:{report.id}",
-    ):
-        target.unlink(missing_ok=True)
+        if not record_usage(
+            db,
+            user,
+            "report",
+            idempotency_key=f"report:{report.id}",
+        ):
+            metrics.increment("billing.report_limit_race")
+            raise HTTPException(
+                status_code=402,
+                detail="Report limit reached for the current plan",
+            )
+        db.commit()
+    except Exception:
         db.rollback()
-        metrics.increment("billing.report_limit_race")
-        raise HTTPException(
-            status_code=402,
-            detail="Report limit reached for the current plan",
-        )
-    db.commit()
+        try:
+            await asyncio.to_thread(delete_stored_report, storage_key)
+        except StorageUnavailable:
+            db.add(
+                StorageDeletion(
+                    storage_key=storage_key, last_error="upload_rollback_cleanup_failed"
+                )
+            )
+            db.commit()
+            logger.error("report_upload_orphan_queued_for_cleanup")
+        raise
     db.refresh(report)
     metrics.increment("reports.processed")
     metrics.observe_ms("reports.processing_latency", elapsed_ms(started))
@@ -159,9 +221,11 @@ def delete_report(
 ) -> None:
     report = _get_owned_report(report_id, user, db)
     settings = get_settings()
-    target = settings.upload_root / report.storage_key
-    if target.exists():
-        target.unlink()
+    staged = []
+    if settings.storage_backend != "s3":
+        staged = stage_files([settings.upload_root / report.storage_key])
+    else:
+        db.add(StorageDeletion(storage_key=report.storage_key))
     db.delete(report)
     db.add(
         AuditEvent(
@@ -171,5 +235,11 @@ def delete_report(
             metadata_json={},
         )
     )
-    db.commit()
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        restore_staged_files(staged)
+        raise
+    purge_staged_files(staged)
     metrics.increment("reports.deleted")

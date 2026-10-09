@@ -14,10 +14,17 @@ MediQuery is a production-shaped software platform for securely organizing text-
 - Laboratory values, units, reference ranges, explicit flags, page numbers, and source evidence are persisted.
 - Numeric laboratory units such as `10^3/uL` and `10*9/L` are supported, including common CBC formats such as WBC and Platelets.
 - Partial-extraction warnings are surfaced when lab-shaped lines cannot be safely parsed.
-- Report history, detail, deletion, and account deletion with database/file cleanup.
+- Report history/detail plus local-file rollback or durable S3 deletion-outbox processing for report/account erasure.
+- Production uploads fail closed unless ClamAV scans the file successfully; S3 uploads explicitly use KMS server-side encryption.
+- Email verification and single-use password recovery tokens; TOTP MFA with KMS-encrypted production seeds; logout/password reset/MFA changes revoke prior bearer tokens.
+- Stripe subscription checkout, customer portal, signature-verified webhook processing, event idempotency, and server-side entitlement updates.
+- Synthetic extraction regression corpus with exact finding precision/recall/F1 and field-level metrics; explicitly not clinical validation.
 - Deterministic PubMed keyword search; semantic/RAG search is not represented as an implemented production capability.
 - Streamlit client for the verified user-facing workflow.
-- Automated unit/API/security/extraction/E2E tests and GitHub Actions quality gates.
+- Versioned Alembic schema migrations, with production startup refusing an absent or stale migration revision.
+- Redis-backed shared sliding-window rate limiting in production with stricter budgets for authentication, reports, and search; production fails closed if Redis is unavailable.
+- Rollback-safe report/account deletion file staging and automated lifecycle tests.
+- Automated unit/API/security/extraction/E2E tests, read-only GitHub Actions quality gates, CodeQL analysis, and Dependabot update automation.
 - Docker production-shaped API image and Compose configuration validation.
 
 ## Verified primary journey
@@ -76,7 +83,9 @@ Future grounded AI could be added behind a replaceable service boundary, but no 
 ## Security posture
 
 - Password hashing with scrypt and per-password salt.
-- JWT expiration and token-type validation.
+- JWT expiration, token-type validation, and account token-version revocation.
+- Production email verification, one-time password reset, optional TOTP MFA, and KMS-encrypted TOTP seeds.
+- Fail-closed ClamAV upload scanning and encrypted S3 object storage with lifecycle rules.
 - Owner-scoped database queries for report authorization.
 - `404` on cross-owner report access to reduce resource enumeration.
 - Server-generated storage paths; user filenames are never used as filesystem paths.
@@ -93,10 +102,13 @@ See `SECURITY.md`, `AI_SAFETY.md`, `DEPLOYMENT.md`, and `BUYER_DUE_DILIGENCE.md`
 Run locally:
 
 ```bash
-python -m black --check src tests app.py
-python -m flake8 src tests app.py --max-line-length=120
+python -m black --check src tests app.py evaluation ops
+python -m flake8 src tests app.py evaluation ops --max-line-length=120
 python -m pytest -q
-python -m compileall -q src app.py
+python -m compileall -q src app.py evaluation ops
+python -m evaluation.extraction.run_eval
+terraform -chdir=infra/aws init -backend=false
+terraform -chdir=infra/aws validate
 ```
 
 GitHub Actions runs the Python quality gate plus a real Docker image build and Docker Compose configuration validation on Ubuntu.
@@ -128,28 +140,24 @@ The client defaults to `http://localhost:8000`. Set `MEDIQUERY_API_URL` for anot
 
 ### Docker API
 
-Create an untracked `.env` containing a managed PostgreSQL `DATABASE_URL`, a unique `JWT_SECRET`, and HTTPS `CORS_ORIGINS`, then:
+Create an untracked `.env` containing a managed PostgreSQL `DATABASE_URL`, a unique `JWT_SECRET`, HTTPS `CORS_ORIGINS`, and a private `RATE_LIMIT_REDIS_URL`, then:
 
 ```bash
 docker compose up --build
 ```
 
-The Compose stack intentionally contains the API service and private upload volume. Streamlit remains a separate client deployment.
+Compose contains the API and private ClamAV service; report objects are stored in the configured S3 bucket, while Streamlit remains a separate client deployment. It is production-shaped configuration, not a substitute for an approved private network and cloud deployment.
 
 ## Production boundary
 
 A real sensitive-data deployment requires additional operational controls that are outside a source repository alone:
 
-1. Managed PostgreSQL with restricted access.
-2. Private encrypted object storage.
-3. TLS behind an appropriate reverse proxy/WAF.
-4. Managed secret storage and rotation.
-5. Isolated asynchronous document processing.
-6. Malware scanning and resource limits.
-7. Backups and tested restoration.
-8. PHI-conscious monitoring and incident response.
-9. Migration/rollback procedures.
-10. Legal, privacy, security, provider, and clinical review appropriate to the target market.
+1. Provision and validate managed PostgreSQL, private S3, KMS, Redis, ClamAV, SMTP, Stripe, and least-privilege workload roles.
+2. Apply reviewed AWS Terraform for storage encryption/lifecycle, database backups, WAF, HTTPS ALB listeners, and CloudWatch/SNS alarms.
+3. Schedule encrypted database backups, restore drills, and the durable object-deletion worker; verify retention and deletion behavior in the deployed account.
+4. Complete independent penetration testing, privacy/legal review, and clinical validation appropriate to the intended use.
+5. Establish an accountable on-call team, alert routing, incident exercises, access reviews, secret rotation, and documented RPO/RTO.
+6. Keep OCR and clinical AI/RAG claims out of the product until implemented and separately evaluated.
 
 MediQuery does **not** claim HIPAA, PIPEDA, PHIPA, GDPR, SOC 2, regulatory clearance, clinical validation, or production medical-data authorization merely because engineering controls exist in this repository.
 

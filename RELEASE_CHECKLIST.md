@@ -1,73 +1,52 @@
 # MediQuery — Release / Buyer Handoff Checklist
 
-## Repository gate
+## Repository gates
+
+### Phase acceptance
+
+- [ ] Phase 17 acceptance: differentiation evidence and claims are reviewed.
+- [ ] Phase 18 acceptance: medical safety tests and non-claims are reviewed.
+- [ ] Phase 19 acceptance: production-readiness tests and external blockers are reviewed.
+- [ ] Phase 20 acceptance: commercial handoff and buyer evidence are reviewed.
 
 - [ ] Pin the exact release commit SHA.
-- [ ] `python -m black --check src tests app.py`
-- [ ] `python -m flake8 src tests app.py --max-line-length=120`
-- [ ] `python -m pytest -q`
-- [ ] `python -m compileall -q src app.py`
-- [ ] GitHub Actions quality gate is green.
-- [ ] Phase 17 acceptance is green.
-- [ ] Phase 18 acceptance is green.
-- [ ] Phase 19 acceptance is green.
-- [ ] Phase 20 acceptance is green.
-- [ ] Phase 21 acceptance is green.
-- [ ] Phase 22 acceptance is green.
-- [ ] Phase 23 acceptance is green.
-- [ ] Phase 24 acceptance is green.
-- [ ] Phase 25 acceptance is green.
-- [ ] No local database, private uploads, `.env`, or credential-shaped secret is committed.
+- [ ] Black formatting, Flake8 lint, pytest, and compileall pass for src, tests, app.py, evaluation, and ops.
+- [ ] Fresh-database Alembic migration passes; upgrade and rollback/restore are tested on a disposable copy.
+- [ ] Synthetic extraction evaluation passes and its scope is described as regression-only, not clinical accuracy.
+- [ ] GitHub Actions quality and Terraform validation are green.
+- [ ] Docker build and production Compose configuration validation pass.
+- [ ] CodeQL/dependency/security gates have no unresolved release-blocking findings.
+- [ ] No local database, private uploads, .env, PHI, token, or credential-shaped secret is committed.
 
-## Phase 21–25 engineering evidence
+## Production infrastructure
 
-- [ ] Production deployment contract passes with managed-database, storage, TLS/WAF, secret, scanning, and backup controls represented.
-- [ ] Deterministic synthetic extraction/retrieval evaluation passes.
-- [ ] Accessibility and commercial UI contracts pass.
-- [ ] Trust/security/compliance evidence map is complete without claiming certification.
-- [ ] Final release manifest identifies the exact revision and all completed phase gates.
+- [ ] Provision managed PostgreSQL, private S3/KMS, Redis, ClamAV, SMTP, Stripe, secret manager, and least-privilege workload roles.
+- [ ] Apply reviewed Terraform for private buckets, lifecycle, database backup plan, WAF, HTTPS listener/redirect, and CloudWatch/SNS alerts.
+- [ ] Verify TLS certificate, DNS, ALB security groups, WAF association, private networking, and trusted proxy IPs in the actual cloud account.
+- [ ] Schedule encrypted backups, isolated restore verification, and storage-deletion outbox worker.
+- [ ] Confirm backup retention and historical-version deletion behavior match the published privacy policy.
+- [ ] Confirm monitoring, alarm routing, backup age, restore-drill metric, and deletion backlog alerts.
+- [ ] Assign named on-call owners and complete an incident-response tabletop.
 
-## Buyer demonstration
+## Account and billing lifecycle
 
-- [ ] Create account with synthetic data only.
-- [ ] Upload synthetic text-based PDF.
-- [ ] Verify structured findings and source evidence.
-- [ ] Verify owner isolation with a second account.
-- [ ] Verify report deletion.
-- [ ] Verify invalid PDF rejection.
-- [ ] Verify Free entitlement enforcement.
-- [ ] Verify retrieval provenance and prompt-injection framing.
+- [ ] Verify email delivery, token expiry/replay prevention, password recovery, TOTP MFA, KMS seed encryption, and logout/session revocation.
+- [ ] Test Stripe checkout, portal, signed webhook, duplicate/out-of-order webhook, cancellation, past-due transition, and entitlement enforcement in test mode.
+- [ ] Confirm customer support, refunds/disputes, tax, subscription terms, and billing disclosures with the payment/legal owners.
 
-## Diligence package
+## Extraction and medical safety
 
-- [ ] `ARCHITECTURE.md`
-- [ ] `SECURITY.md`
-- [ ] `AI_SAFETY.md`
-- [ ] `TESTING.md`
-- [ ] `DEPLOYMENT.md`
-- [ ] `PERFORMANCE.md`
-- [ ] `ACQUISITION.md`
-- [ ] `BUYER_DUE_DILIGENCE.md`
-- [ ] `docs/DEMONSTRABLE_DIFFERENTIATION.md`
-- [ ] `docs/PHASE18_MEDICAL_AI_SAFETY.md`
-- [ ] `docs/PHASE19_PRODUCTION_READINESS.md`
-- [ ] `docs/PHASE20_COMMERCIAL_HANDOFF.md`
-- [ ] `docs/PHASE21_PRODUCTION_INFRASTRUCTURE.md`
-- [ ] `docs/PHASE22_AI_EVALUATION.md`
-- [ ] `docs/PHASE23_COMMERCIAL_PRODUCT.md`
-- [ ] `docs/PHASE24_TRUST_SECURITY_COMPLIANCE.md`
-- [ ] `docs/PHASE25_FINAL_SALE_READINESS.md`
+- [ ] Run the labeled synthetic regression corpus and retain metrics for exact precision/recall/F1 and field-level correctness.
+- [ ] Obtain a representative legally authorized and independently double-labeled evaluation corpus before real-world accuracy claims.
+- [ ] Complete clinical review of intended use, risk criteria, high-risk extraction errors, and human-factors wording.
+- [ ] Do not market OCR or clinical AI/RAG as implemented until each is built and separately evaluated.
 
-## External closing gates
+## Independent assurance — external sign-off required
 
-- [ ] IP ownership and contributor rights verified.
-- [ ] Dependency/model/data licences reviewed.
-- [ ] Security/threat-model review completed.
-- [ ] Target-market privacy/legal/regulatory review completed.
-- [ ] Clinical review/validation appropriate to intended use completed.
-- [ ] Extraction quality independently evaluated.
-- [ ] Customer demand and willingness to pay validated.
-- [ ] Production deployment evidence reviewed.
-- [ ] Transaction and IP-transfer agreements executed.
+- [ ] Independent penetration test and retest complete; no unresolved critical/high findings.
+- [ ] Privacy/legal review complete for target markets, consent, data residency, retention, vendor agreements, deletion, breach duties, and regulatory scope.
+- [ ] Clinical validation appropriate to intended use completed by qualified reviewers.
+- [ ] IP ownership, contributor rights, dependency licenses, and data/source provenance reviewed.
+- [ ] Production deployment, backup/restore, incident-response, accessibility, and load tests reviewed and signed off.
 
-These external items are intentionally not represented as completed by repository CI. Passing Phase 25 means the engineering package is organized for diligence, not that an acquisition has occurred or that medical-data processing is authorized.
+The repository prepares evidence and controls but cannot self-certify an external assessment. Passing CI does not mean any independent review or production authorization is complete.

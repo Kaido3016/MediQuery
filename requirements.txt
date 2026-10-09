@@ -36,6 +36,7 @@ spacy==3.7.2
 # Database / caching
 redis==5.0.1
 sqlalchemy==2.0.23
+alembic==1.13.1
 psycopg2-binary==2.9.7
 
 # Development / testing
@@ -54,3 +55,8 @@ bcrypt==4.0.1
 # Packaging
 setuptools==68.2.2
 wheel==0.41.2
+
+# Production storage, MFA, and verified Stripe webhooks
+boto3==1.35.99
+pyotp==2.9.0
+stripe==11.4.1

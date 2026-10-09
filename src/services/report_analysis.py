@@ -16,7 +16,7 @@ MAX_EVIDENCE_CHARS = 500
 # in real laboratory reports. Numeric units are restricted to multiplier forms
 # so a reference range such as ``(3.9-5.6)`` cannot be swallowed as a unit.
 UNIT_PATTERN = (
-    r"(?:[A-Za-zµμ][A-Za-zµμ0-9/%^.\-*]*|" r"10(?:\^|\*)\d+[A-Za-zµμ0-9/%^.\-*]*)"
+    r"(?:[A-Za-zµμ][A-Za-zµμ0-9/%^.\-*]*|%|" r"10(?:\^|\*)\d+[A-Za-zµμ0-9/%^.\-*]*)"
 )
 LAB_PATTERN = re.compile(
     r"^(?P<name>[A-Za-z][A-Za-z0-9 /()'\-]{1,80}?)\s*[:\t]+\s*"
@@ -168,6 +168,13 @@ def _parse_page_findings(text: str, page: int) -> tuple[list[ExtractedFinding], 
             "page",
             "date",
             "patient",
+            "patient id",
+            "patient name",
+            "date of birth",
+            "collection date",
+            "blood pressure",
+            "lab status",
+            "comment",
             "result",
             "reference range",
             "flag",

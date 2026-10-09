@@ -21,7 +21,7 @@ The acquisition thesis is **engineering acceleration and reusable product/IP**, 
 - Partial-extraction attention warnings.
 - Account deletion with report/file cleanup.
 - Usage entitlement and metering foundation.
-- Request IDs, aggregate telemetry, rate limiting, protected metrics.
+- Request IDs, aggregate telemetry, Redis-backed shared rate limiting with endpoint-specific budgets, protected metrics, and fail-closed behavior when the production limiter is unavailable.
 - Streamlit reference client.
 - Automated tests including the primary E2E journey.
 - GitHub quality and Docker gates.
@@ -61,7 +61,7 @@ The remaining work is explicit rather than hidden: production infrastructure, br
 
 ## 6. Security and privacy
 
-Application controls include authenticated access, owner-scoped authorization, layered PDF validation, server-generated storage paths, safe errors, security headers, CORS controls, rate limiting, and deletion paths.
+Application controls include authenticated access, owner-scoped authorization, layered PDF validation, server-generated storage paths, safe errors, security headers, CORS controls, shared Redis-backed rate limiting, versioned schema migrations, rollback-safe file deletion, and deletion paths.
 
 These controls do not constitute a compliance certification. Real sensitive-data deployment requires managed infrastructure, private storage, secret management, malware scanning, isolated processing, backups/restore testing, monitoring, incident response, and applicable privacy/security/legal review.
 
@@ -71,7 +71,7 @@ Present MediQuery as a **health-tech software/IP asset** that accelerates a medi
 
 A CAD $100,000+ asking price may be used as a negotiation anchor, but it is not a guaranteed valuation. Final price depends on strategic fit, clean transferable IP, buyer replacement cost, product roadmap fit, and demonstrated time-to-market benefit.
 
-No verified customer traction is claimed unless independently documented.
+There is **no verified customer traction** claimed unless independently documented.
 
 ## 8. Buyer demo
 

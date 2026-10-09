@@ -40,16 +40,30 @@ def verify_password(password: str, stored: str) -> bool:
         return False
 
 
-def create_access_token(user_id: int) -> str:
+def create_access_token(user_id: int, token_version: int = 0) -> str:
     settings = get_settings()
     expires = datetime.now(timezone.utc) + timedelta(
         minutes=settings.access_token_minutes
     )
     return jwt.encode(
-        {"sub": str(user_id), "exp": expires, "type": "access"},
+        {"sub": str(user_id), "exp": expires, "type": "access", "ver": token_version},
         settings.jwt_secret,
         algorithm=settings.jwt_algorithm,
     )
+
+
+def access_token_version(token: str) -> int | None:
+    """Return the revocation version from a valid access token."""
+    settings = get_settings()
+    try:
+        payload = jwt.decode(
+            token, settings.jwt_secret, algorithms=[settings.jwt_algorithm]
+        )
+        if payload.get("type") != "access":
+            return None
+        return int(payload.get("ver", 0))
+    except (JWTError, ValueError, TypeError):
+        return None
 
 
 def decode_access_token(token: str) -> int | None:
