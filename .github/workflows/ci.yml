@@ -53,10 +53,34 @@ jobs:
           JWT_SECRET: ci-only-secret-that-is-long-enough-for-validation
           CORS_ORIGINS: https://app.example.test
           RATE_LIMIT_REDIS_URL: redis://redis.example.test:6379/0
+          OBJECT_STORAGE_BUCKET: mediquery-ci-reports
+          OBJECT_STORAGE_KMS_KEY_ID: arn:aws:kms:ca-central-1:123456789012:key/00000000-0000-0000-0000-000000000000
+          SMTP_HOST: smtp.example.test
+          SMTP_FROM_EMAIL: noreply@example.test
+          FRONTEND_BASE_URL: https://app.example.test
+          STRIPE_SECRET_KEY: sk_test_placeholder
+          STRIPE_WEBHOOK_SECRET: whsec_placeholder
+          STRIPE_PRICE_ID: price_placeholder
+          STRIPE_SUCCESS_URL: https://app.example.test/billing/success
+          STRIPE_CANCEL_URL: https://app.example.test/billing/cancel
+          METRICS_TOKEN: ci-only-metrics-secret-that-is-long-enough
+          FORWARDED_ALLOW_IPS: 127.0.0.1
         run: |
           printf '%s\n' \
             'DATABASE_URL=postgresql://mediquery:ci@db:5432/mediquery' \
             'JWT_SECRET=ci-only-secret-that-is-long-enough-for-validation' \
             'CORS_ORIGINS=https://app.example.test' \
-            'RATE_LIMIT_REDIS_URL=redis://redis.example.test:6379/0' > .env
+            'RATE_LIMIT_REDIS_URL=redis://redis.example.test:6379/0' \
+            'OBJECT_STORAGE_BUCKET=mediquery-ci-reports' \
+            'OBJECT_STORAGE_KMS_KEY_ID=arn:aws:kms:ca-central-1:123456789012:key/00000000-0000-0000-0000-000000000000' \
+            'SMTP_HOST=smtp.example.test' \
+            'SMTP_FROM_EMAIL=noreply@example.test' \
+            'FRONTEND_BASE_URL=https://app.example.test' \
+            'STRIPE_SECRET_KEY=sk_test_placeholder' \
+            'STRIPE_WEBHOOK_SECRET=whsec_placeholder' \
+            'STRIPE_PRICE_ID=price_placeholder' \
+            'STRIPE_SUCCESS_URL=https://app.example.test/billing/success' \
+            'STRIPE_CANCEL_URL=https://app.example.test/billing/cancel' \
+            'METRICS_TOKEN=ci-only-metrics-secret-that-is-long-enough' \
+            'FORWARDED_ALLOW_IPS=127.0.0.1' > .env
           docker compose config --quiet
