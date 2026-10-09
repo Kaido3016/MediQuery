@@ -8,6 +8,7 @@ services:
       DATABASE_URL: ${DATABASE_URL:?Set a managed PostgreSQL DATABASE_URL in .env}
       JWT_SECRET: ${JWT_SECRET:?Set a unique JWT_SECRET in .env}
       CORS_ORIGINS: ${CORS_ORIGINS:?Set HTTPS frontend origin(s) in .env}
+      RATE_LIMIT_REDIS_URL: ${RATE_LIMIT_REDIS_URL:?Set a private Redis URL in .env}
       UPLOAD_ROOT: /data/uploads
     ports:
       - "127.0.0.1:8000:8000"
