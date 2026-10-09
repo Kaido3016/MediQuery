@@ -50,3 +50,25 @@ def test_production_settings_require_shared_rate_limit_backend():
     )
     with pytest.raises(RuntimeError, match="RATE_LIMIT_REDIS_URL"):
         settings.validate_for_runtime()
+
+
+def test_production_limiter_fails_closed_when_redis_is_unavailable(monkeypatch):
+    class BrokenRedis:
+        async def eval(self, *args, **kwargs):
+            raise OSError("backend unavailable")
+
+    monkeypatch.setattr(
+        "src.core.rate_limit.Redis.from_url",
+        lambda *args, **kwargs: BrokenRedis(),
+    )
+    limiter = FixedWindowRateLimiter()
+    with pytest.raises(RateLimitBackendUnavailable):
+        asyncio.run(
+            limiter.allowed(
+                "client",
+                10,
+                60,
+                redis_url="redis://private-redis.example.test:6379/0",
+                fail_closed=True,
+            )
+        )
