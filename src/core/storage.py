@@ -74,3 +74,15 @@ def _s3_client():
         region_name=settings.object_storage_region,
         endpoint_url=settings.object_storage_endpoint_url,
     )
+
+
+def check_storage() -> bool:
+    """Check access to the configured private bucket without listing object names."""
+    settings = get_settings()
+    if settings.storage_backend != "s3":
+        return settings.environment.lower() != "production"
+    try:
+        _s3_client().head_bucket(Bucket=settings.object_storage_bucket)
+        return True
+    except (BotoCoreError, ClientError):
+        return False
