@@ -7,10 +7,23 @@ umask 077
 : "${RESTORE_TEST_DATABASE_URL:?Set RESTORE_TEST_DATABASE_URL to a disposable isolated database}"
 : "${PRODUCTION_DATABASE_URL:?Set PRODUCTION_DATABASE_URL so the script can refuse accidental production restore}"
 
-if [[ "$RESTORE_TEST_DATABASE_URL" == "$PRODUCTION_DATABASE_URL" ]]; then
-  echo "Refusing to restore into the production database." >&2
-  exit 2
-fi
+python3 - "$RESTORE_TEST_DATABASE_URL" "$PRODUCTION_DATABASE_URL" <<'PY'
+import sys
+from urllib.parse import unquote, urlparse
+
+def target(value):
+    parsed = urlparse(value)
+    return (parsed.hostname, parsed.port, unquote(parsed.path.lstrip("/")))
+
+restore_target, production_target = map(target, sys.argv[1:])
+if restore_target == production_target or (
+    restore_target[0] == production_target[0]
+    and restore_target[1] == production_target[1]
+    and restore_target[2] == production_target[2]
+):
+    raise SystemExit("Refusing to restore into the production database.")
+PY
+
 command -v aws >/dev/null
 command -v age >/dev/null
 command -v pg_restore >/dev/null
@@ -23,5 +36,5 @@ revision="$(psql "$RESTORE_TEST_DATABASE_URL" -Atqc 'select version_num from ale
 psql "$RESTORE_TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -Atqc \
   "select count(*) from information_schema.tables where table_schema='public' and table_name in ('users','reports','report_findings','account_tokens','payment_events','storage_deletions')" \
   | awk '$1 == 6 { ok=1 } END { exit !ok }'
-aws cloudwatch put-metric-data --namespace MediQuery/Backup --metric-name RestoreVerification --value 1 --unit Count --region "\${AWS_REGION:-ca-central-1}"
+aws cloudwatch put-metric-data --namespace MediQuery/Backup --metric-name RestoreVerification --value 1 --unit Count --region "${AWS_REGION:-ca-central-1}"
 printf 'restore_verification=passed migration_revision=%s\n' "$revision"
