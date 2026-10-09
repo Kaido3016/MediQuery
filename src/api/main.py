@@ -25,7 +25,10 @@ logger = logging.getLogger("mediquery.api")
 async def lifespan(_: FastAPI):
     """Initialize persistence before serving requests."""
     create_database()
-    yield
+    try:
+        yield
+    finally:
+        await rate_limiter.aclose()
 
 
 app = FastAPI(
