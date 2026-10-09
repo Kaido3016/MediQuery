@@ -47,7 +47,12 @@ def evaluate() -> dict[str, object]:
         predicted_by_id = {_identity(item): item for item in predicted}
         matched_ids = expected_by_id.keys() & predicted_by_id.keys()
         missed_findings.extend(
-            {"case_id": case["id"], "name": expected_by_id[key]["name"], "value": expected_by_id[key]["value"], "unit": expected_by_id[key]["unit"]}
+            {
+                "case_id": case["id"],
+                "name": expected_by_id[key]["name"],
+                "value": expected_by_id[key]["value"],
+                "unit": expected_by_id[key]["unit"],
+            }
             for key in expected_by_id.keys() - predicted_by_id.keys()
         )
 
