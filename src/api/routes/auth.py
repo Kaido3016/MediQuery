@@ -38,7 +38,8 @@ def signup(payload: SignUpRequest, db: Session = Depends(get_db)) -> AuthRespons
         password_hash = hash_password(payload.password)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
-    user = User(email=email, password_hash=password_hash)
+    settings = get_settings()
+    user = User(email=email, password_hash=password_hash, email_verified=settings.environment.lower() != "production")
     db.add(user)
     db.flush()
     db.add(AuditEvent(actor_id=user.id, action="account_created", metadata_json={}))
@@ -54,6 +55,8 @@ def signup(payload: SignUpRequest, db: Session = Depends(get_db)) -> AuthRespons
         from src.api.routes.account_security import send_verification_for_user
         send_verification_for_user(user, db)
     metrics.increment("accounts.signup")
+    if settings.environment.lower() == "production":
+        return AuthResponse(access_token=None, verification_required=True)
     return AuthResponse(access_token=create_access_token(user.id, user.token_version))
 
 
