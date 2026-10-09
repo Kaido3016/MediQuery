@@ -29,6 +29,26 @@ class Settings(BaseSettings):
     billing_checkout_url: str | None = None
     metrics_token: str | None = None
     rate_limit_redis_url: str | None = None
+    storage_backend: str = "local"
+    object_storage_bucket: str | None = None
+    object_storage_region: str = "ca-central-1"
+    object_storage_endpoint_url: str | None = None
+    object_storage_kms_key_id: str | None = None
+    clamav_host: str | None = None
+    clamav_port: int = Field(default=3310, ge=1, le=65535)
+    smtp_host: str | None = None
+    smtp_port: int = Field(default=587, ge=1, le=65535)
+    smtp_username: str | None = None
+    smtp_password: str | None = None
+    smtp_from_email: str | None = None
+    frontend_base_url: str = "http://localhost:8501"
+    email_token_minutes: int = Field(default=30, ge=5, le=1440)
+    stripe_secret_key: str | None = None
+    stripe_webhook_secret: str | None = None
+    stripe_price_id: str | None = None
+    stripe_success_url: str | None = None
+    stripe_cancel_url: str | None = None
+    mfa_issuer: str = "MediQuery"
 
     @field_validator("cors_origins", mode="before")
     @classmethod
@@ -57,6 +77,17 @@ class Settings(BaseSettings):
                 raise RuntimeError(
                     "METRICS_TOKEN must be at least 32 characters when configured"
                 )
+            if self.storage_backend != "s3":
+                raise RuntimeError("Production requires private S3-compatible object storage")
+            if not self.object_storage_bucket or not self.object_storage_kms_key_id:
+                raise RuntimeError("Production object storage bucket and KMS key are required")
+            if not self.clamav_host:
+                raise RuntimeError("Production requires a configured malware-scanning service")
+            if not all((self.smtp_host, self.smtp_from_email)):
+                raise RuntimeError("Production requires SMTP delivery for account security emails")
+            if not all((self.stripe_secret_key, self.stripe_webhook_secret, self.stripe_price_id,
+                        self.stripe_success_url, self.stripe_cancel_url)):
+                raise RuntimeError("Production billing requires complete Stripe configuration")
             if not self.rate_limit_redis_url:
                 raise RuntimeError(
                     "RATE_LIMIT_REDIS_URL is required in production for shared rate limiting"
