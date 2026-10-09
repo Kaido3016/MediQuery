@@ -12,6 +12,6 @@ def test_synthetic_extraction_corpus_is_large_enough_and_labeled():
 
 def test_parser_meets_regression_threshold_on_synthetic_fixture():
     result = evaluate()
-    assert result["precision"] >= 0.95
-    assert result["recall"] >= 0.95
-    assert result["f1"] >= 0.95
+    assert result["exact_finding"]["precision"] >= 0.95
+    assert result["exact_finding"]["recall"] >= 0.95
+    assert result["exact_finding"]["f1"] >= 0.95
