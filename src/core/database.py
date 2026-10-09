@@ -73,6 +73,18 @@ class AccountToken(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
+class StorageDeletion(Base):
+    """Durable outbox for object deletions that must survive API process restarts."""
+
+    __tablename__ = "storage_deletions"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    storage_key: Mapped[str] = mapped_column(String(512), nullable=False)
+    requested_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    processed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, index=True)
+    attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    last_error: Mapped[str | None] = mapped_column(String(64), nullable=True)
+
+
 class PaymentEvent(Base):
     """Idempotency ledger for verified provider webhook event IDs."""
 
