@@ -1,7 +1,6 @@
 """Authenticated, owner-scoped report lifecycle endpoints."""
 
 import asyncio
-import logging
 from pathlib import Path
 from time import perf_counter
 from uuid import uuid4
@@ -14,7 +13,11 @@ from src.api.dependencies import current_user
 from src.api.schemas import PlanResponse, ReportResponse
 from src.core.billing import can_consume, current_usage, get_plan, record_usage
 from src.core.database import AuditEvent, Report, ReportFinding, User, get_db
-from src.core.file_lifecycle import purge_staged_files, restore_staged_files, stage_files
+from src.core.file_lifecycle import (
+    purge_staged_files,
+    restore_staged_files,
+    stage_files,
+)
 from src.core.observability import elapsed_ms, metrics
 from src.core.settings import get_settings
 from src.services.report_analysis import (
@@ -24,7 +27,6 @@ from src.services.report_analysis import (
 )
 
 router = APIRouter()
-logger = logging.getLogger("mediquery.reports")
 
 
 def _get_owned_report(report_id: str, user: User, db: Session) -> Report:
