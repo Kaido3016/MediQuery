@@ -2,7 +2,7 @@
 
 ## Required providers
 
-The production API fails closed unless these are configured:
+The production API fails closed unless these are configured. Required controls include managed Postgres, private encrypted object storage, TLS/WAF, a secret manager, backups/restore tests, and malware scanning:
 
 - Managed PostgreSQL and a current Alembic schema.
 - Private S3-compatible object storage with a KMS key; production uploads explicitly request KMS encryption.

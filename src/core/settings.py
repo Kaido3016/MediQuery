@@ -74,14 +74,21 @@ class Settings(BaseSettings):
                 )
             if any(origin.startswith("http://") for origin in self.cors_origins):
                 raise RuntimeError("Production CORS origins must use HTTPS")
-            if not self.frontend_base_url.startswith("https://"):
-                raise RuntimeError("Production FRONTEND_BASE_URL must use HTTPS")
-            if not all(url and url.startswith("https://") for url in (self.stripe_success_url, self.stripe_cancel_url, self.stripe_portal_return_url)):
-                raise RuntimeError("Production Stripe redirect URLs must use HTTPS")
             if self.metrics_token is not None and len(self.metrics_token) < 32:
                 raise RuntimeError(
                     "METRICS_TOKEN must be at least 32 characters when configured"
                 )
+            if not self.frontend_base_url.startswith("https://"):
+                raise RuntimeError("Production FRONTEND_BASE_URL must use HTTPS")
+            if not all(
+                url and url.startswith("https://")
+                for url in (
+                    self.stripe_success_url,
+                    self.stripe_cancel_url,
+                    self.stripe_portal_return_url,
+                )
+            ):
+                raise RuntimeError("Production Stripe redirect URLs must use HTTPS")
             if self.storage_backend != "s3":
                 raise RuntimeError("Production requires private S3-compatible object storage")
             if not self.object_storage_bucket or not self.object_storage_kms_key_id:
