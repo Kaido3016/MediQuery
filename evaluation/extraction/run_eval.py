@@ -83,7 +83,9 @@ def evaluate() -> dict[str, object]:
         "dataset_version": dataset["dataset_version"],
         "scope": "synthetic parser regression only; not clinical validation",
         "case_count": len(dataset["cases"]),
-        "labeled_finding_count": sum(len(case["expected"]) for case in dataset["cases"]),
+        "labeled_finding_count": sum(
+            len(case["expected"]) for case in dataset["cases"]
+        ),
         "exact_finding": {
             "true_positive": exact_tp,
             "false_positive": exact_fp,
@@ -96,9 +98,7 @@ def evaluate() -> dict[str, object]:
             "false_negative": detection_fn,
             **_metrics(detection_tp, detection_fp, detection_fn),
         },
-        "matched_finding_field_accuracy": round(
-            field_correct / max(field_total, 1), 4
-        ),
+        "matched_finding_field_accuracy": round(field_correct / max(field_total, 1), 4),
         "per_case": per_case,
     }
 
