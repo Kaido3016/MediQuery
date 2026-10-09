@@ -91,6 +91,13 @@ class FixedWindowRateLimiter:
             )
         return self._local_allowed(key, limit, window_seconds)
 
+    async def aclose(self) -> None:
+        """Close Redis connections during application shutdown."""
+        clients = list(self._redis_clients.values())
+        self._redis_clients.clear()
+        for client in clients:
+            await client.aclose()
+
     def _local_allowed(self, key: str, limit: int, window_seconds: int) -> bool:
         now = monotonic()
         cutoff = now - window_seconds
