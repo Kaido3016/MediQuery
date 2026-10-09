@@ -37,7 +37,8 @@ def send_verification_for_user(user: User, db: Session) -> None:
         send_account_email(
             user.email,
             "Verify your MediQuery email",
-            f"Open MediQuery and confirm your email:\n\n{link}\n\nThis link expires in {settings.email_token_minutes} minutes.",
+            f"Open MediQuery and confirm your email:\n\n"
+            f"{link}\n\nThis link expires in {settings.email_token_minutes} minutes.",
         )
     except Exception as exc:
         logger.warning("account_email_delivery_failed purpose=verify_email")
@@ -106,7 +107,9 @@ def request_password_reset(
             send_account_email(
                 user.email,
                 "Reset your MediQuery password",
-                f"Use this link to reset your password:\n\n{link}\n\nThis link expires in {settings.email_token_minutes} minutes. Ignore this message if you did not request it.",
+                f"Use this link to reset your password:\n\n"
+                f"{link}\n\nThis link expires in {settings.email_token_minutes} minutes. "
+                "Ignore this message if you did not request it.",
             )
         except Exception:
             logger.warning("account_email_delivery_failed purpose=password_reset")
@@ -184,16 +187,17 @@ def enable_mfa(
 
 @router.post("/mfa/disable")
 def disable_mfa(
-    payload: TotpRequest,
-    password: str,
+    payload: MfaDisableRequest,
     user: User = Depends(current_user),
     db: Session = Depends(get_db),
 ) -> dict[str, str]:
     if (
         not user.mfa_enabled
         or not user.mfa_secret
-        or not verify_password(password, user.password_hash)
-        or not pyotp.TOTP(user.mfa_secret).verify(payload.code, valid_window=1)
+        or not verify_password(payload.password, user.password_hash)
+        or not pyotp.TOTP(decrypt_mfa_secret(user.mfa_secret)).verify(
+            payload.code, valid_window=1
+        )
     ):
         raise HTTPException(
             status_code=401, detail="Password or authenticator code is invalid."

@@ -219,7 +219,8 @@ def signed_out_view() -> None:
     with third:
         st.markdown("### Simple plans")
         st.write(
-            "The Free plan has a configurable report allowance. Pro upgrades and subscription management use Stripe when configured by the operator."
+            "The Free plan has a configurable report allowance. "
+            "Pro upgrades and subscription management use Stripe when configured by the operator."
         )
     st.markdown("### Frequently asked questions")
     with st.expander("Can MediQuery diagnose me?"):
@@ -320,7 +321,8 @@ def dashboard() -> None:
                     st.error("MediQuery is unavailable. Please try again shortly.")
     with st.sidebar.expander("Account settings"):
         st.caption(
-            "Deleting your account queues live report deletion. Encrypted backups and older object versions expire on the documented retention schedule, not instantly."
+            "Deleting your account queues live report deletion. "
+            "Encrypted backups and older object versions expire on the documented retention schedule, not instantly."
         )
         confirm_delete = st.checkbox(
             "I understand this cannot be undone", key="confirm-account-delete"
