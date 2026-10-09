@@ -1,6 +1,7 @@
 """Authenticated, owner-scoped report lifecycle endpoints."""
 
 import asyncio
+import logging
 from pathlib import Path
 from time import perf_counter
 from uuid import uuid4
@@ -27,6 +28,7 @@ from src.services.report_analysis import (
 )
 
 router = APIRouter()
+logger = logging.getLogger("mediquery.reports")
 
 
 def _get_owned_report(report_id: str, user: User, db: Session) -> Report:
@@ -47,6 +49,13 @@ def _get_owned_report(report_id: str, user: User, db: Session) -> Report:
 def _store_report_bytes(target: Path, raw: bytes) -> None:
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_bytes(raw)
+
+
+def _cleanup_upload_file(target: Path) -> None:
+    try:
+        target.unlink(missing_ok=True)
+    except OSError:
+        logger.error("report_upload_orphan_cleanup_failed")
 
 
 @router.post("", response_model=ReportResponse, status_code=status.HTTP_201_CREATED)
@@ -79,7 +88,12 @@ async def upload_report(
     report_id = str(uuid4())
     storage_key = f"{user.id}/{report_id}.pdf"
     target = settings.upload_root / storage_key
-    await asyncio.to_thread(_store_report_bytes, target, raw)
+    try:
+        await asyncio.to_thread(_store_report_bytes, target, raw)
+    except OSError:
+        _cleanup_upload_file(target)
+        raise
+
     report = Report(
         id=report_id,
         owner_id=user.id,
@@ -88,35 +102,38 @@ async def upload_report(
         page_count=extraction.page_count,
         extraction_note=extraction.note,
     )
-    db.add(report)
-    db.flush()
-    for finding in extraction.findings:
-        db.add(ReportFinding(report_id=report.id, **finding.__dict__))
-    db.add(
-        AuditEvent(
-            actor_id=user.id,
-            action="report_uploaded",
-            target_id=report.id,
-            metadata_json={
-                "pages": extraction.page_count,
-                "finding_count": len(extraction.findings),
-            },
+    try:
+        db.add(report)
+        db.flush()
+        for finding in extraction.findings:
+            db.add(ReportFinding(report_id=report.id, **finding.__dict__))
+        db.add(
+            AuditEvent(
+                actor_id=user.id,
+                action="report_uploaded",
+                target_id=report.id,
+                metadata_json={
+                    "pages": extraction.page_count,
+                    "finding_count": len(extraction.findings),
+                },
+            )
         )
-    )
-    if not record_usage(
-        db,
-        user,
-        "report",
-        idempotency_key=f"report:{report.id}",
-    ):
-        target.unlink(missing_ok=True)
+        if not record_usage(
+            db,
+            user,
+            "report",
+            idempotency_key=f"report:{report.id}",
+        ):
+            metrics.increment("billing.report_limit_race")
+            raise HTTPException(
+                status_code=402,
+                detail="Report limit reached for the current plan",
+            )
+        db.commit()
+    except Exception:
         db.rollback()
-        metrics.increment("billing.report_limit_race")
-        raise HTTPException(
-            status_code=402,
-            detail="Report limit reached for the current plan",
-        )
-    db.commit()
+        _cleanup_upload_file(target)
+        raise
     db.refresh(report)
     metrics.increment("reports.processed")
     metrics.observe_ms("reports.processing_latency", elapsed_ms(started))
