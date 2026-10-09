@@ -91,6 +91,12 @@ class FixedWindowRateLimiter:
             )
         return self._local_allowed(key, limit, window_seconds)
 
+    def reset_local_state(self) -> None:
+        """Clear in-process counters; intended for isolated tests and development resets."""
+        with self._lock:
+            self._hits.clear()
+            self._calls = 0
+
     async def aclose(self) -> None:
         """Close Redis connections during application shutdown."""
         clients = list(self._redis_clients.values())
