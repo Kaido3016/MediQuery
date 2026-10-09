@@ -71,7 +71,7 @@ Present MediQuery as a **health-tech software/IP asset** that accelerates a medi
 
 A CAD $100,000+ asking price may be used as a negotiation anchor, but it is not a guaranteed valuation. Final price depends on strategic fit, clean transferable IP, buyer replacement cost, product roadmap fit, and demonstrated time-to-market benefit.
 
-No verified customer traction is claimed unless independently documented.
+There is **no verified customer traction** claimed unless independently documented.
 
 ## 8. Buyer demo
 
