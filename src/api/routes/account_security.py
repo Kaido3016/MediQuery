@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from src.api.dependencies import current_user
-from src.api.schemas import PasswordResetConfirm, PasswordResetRequest, TokenRequest, TotpRequest
+from src.api.schemas import MfaDisableRequest, PasswordResetConfirm, PasswordResetRequest, TokenRequest, TotpRequest
 from src.core.account_tokens import consume_account_token, issue_account_token
 from src.core.database import AuditEvent, User, get_db
 from src.core.email_delivery import send_account_email
