@@ -17,3 +17,11 @@ output "waf_web_acl_arn" {
 output "operations_topic_arn" {
   value = aws_sns_topic.operations.arn
 }
+
+output "api_report_storage_policy_arn" {
+  value = aws_iam_policy.api_report_storage.arn
+}
+
+output "backup_operator_policy_arn" {
+  value = aws_iam_policy.encrypted_backup_objects.arn
+}
