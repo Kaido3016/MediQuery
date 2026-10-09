@@ -24,7 +24,7 @@ The extraction corpus is synthetic and designed for software regression. Its sco
 
 The Terraform and application code do not provision an actual production account, managed database, DNS/certificate, application cluster, private network, SMTP provider, Stripe product/webhook, ClamAV fleet, or on-call function. These must be configured and verified by the operator.
 
-An independent penetration test, privacy/legal review, and clinical validation have not been performed by this repository change. Review templates are provided in docs/PENETRATION_TEST_SCOPE.md, docs/PRIVACY_LEGAL_REVIEW_CHECKLIST.md, and docs/CLINICAL_VALIDATION_PROTOCOL.md. They are preparation documents, not signed assessments.
+**No clinical validation** or independent penetration test, privacy/legal review, or clinical validation has been performed by this repository change. Review templates are provided in docs/PENETRATION_TEST_SCOPE.md, docs/PRIVACY_LEGAL_REVIEW_CHECKLIST.md, and docs/CLINICAL_VALIDATION_PROTOCOL.md. They are preparation documents, not signed assessments.
 
 ## Data retention and deletion
 
@@ -32,4 +32,4 @@ Live S3 objects are deleted through the durable outbox. S3 historical object ver
 
 ## Commercial/IP diligence
 
-No customer revenue, retention, partnership, or market traction is claimed unless separately documented. Verify code ownership, contributor rights, dependency licenses, data/source provenance, trademark rights, privacy/regulatory scope, and transaction/IP-transfer terms before a commercial sale. No certification, clinical validation, or authorization to process real patient data is claimed.
+There is **no verified customer traction** in this repository. No customer revenue, retention, partnership, or market traction is claimed unless separately documented. Verify code ownership, contributor rights, dependency licenses, data/source provenance, trademark rights, privacy/regulatory scope, and transaction/IP-transfer terms before a commercial sale. No certification, clinical validation, or authorization to process real patient data is claimed.
